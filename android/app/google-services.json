@@ -1,0 +1,113 @@
+{
+  "project_info": {
+    "project_number": "2227716459",
+    "firebase_url": "https://kyn-app.firebaseio.com",
+    "project_id": "kyn-app",
+    "storage_bucket": "kyn-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:2227716459:android:e5145ac8a385ec8f",
+        "android_client_info": {
+          "package_name": "com.kynco.kyn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "2227716459-imshar79qv00ppv7t2c80phhmdct3jfv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kynco.kyn",
+            "certificate_hash": "3299c2259c9864024c525606d7b782bfd4a403d7"
+          }
+        },
+        {
+          "client_id": "2227716459-ahvulahttd352k1p5fmjmm1ka2p2uj06.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3MP3LFZpvVXMAoBALe9TtXuiGsSwkJg8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "2227716459-q0rfba8gu9rsiusgpud73o3761dt00i3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kyn.ios"
+              }
+            },
+            {
+              "client_id": "2227716459-ahvulahttd352k1p5fmjmm1ka2p2uj06.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:2227716459:android:598345716dc20c79",
+        "android_client_info": {
+          "package_name": "com.kyn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "2227716459-sev0o93caahkkotcv6ov35lb56q36eco.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kyn",
+            "certificate_hash": "3299c2259c9864024c525606d7b782bfd4a403d7"
+          }
+        },
+        {
+          "client_id": "2227716459-ahvulahttd352k1p5fmjmm1ka2p2uj06.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3MP3LFZpvVXMAoBALe9TtXuiGsSwkJg8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "2227716459-q0rfba8gu9rsiusgpud73o3761dt00i3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kyn.ios"
+              }
+            },
+            {
+              "client_id": "2227716459-ahvulahttd352k1p5fmjmm1ka2p2uj06.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
