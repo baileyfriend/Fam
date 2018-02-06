@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 final ThemeData kIOSTheme = new ThemeData(
@@ -17,20 +18,29 @@ final ThemeData kDefaultTheme = new ThemeData(
 );
 
 final googleSignIn = new GoogleSignIn();
+final auth = FirebaseAuth.instance;
 
 void main() => runApp(new MyApp());
 
 Future<Null> _ensureLoggedIn() async {
   GoogleSignInAccount user = googleSignIn.currentUser;
-  if (user == null){
+  if (user == null) {
     user = await googleSignIn.signInSilently();
     print('Signed in silently');
-  }
-  else if (user == null){
+  } else if (user == null) {
     await googleSignIn.signIn();
     print('signed user in');
-  } else{
+  } else {
     print('Didn\'t need to sign user in');
+  }
+
+  if (await auth.currentUser() == null){
+    GoogleSignInAuthentication credentials =
+        await googleSignIn.currentUser.authentication;
+    await auth.signInWithGoogle(
+        idToken: credentials.idToken,
+        accessToken: credentials.accessToken
+    );
   }
 
 }
