@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 final ThemeData kIOSTheme = new ThemeData(
   primarySwatch: Colors.green,
   primaryColor: Colors.grey[100],
@@ -23,7 +22,9 @@ final auth = FirebaseAuth.instance;
 void main() => runApp(new MyApp());
 
 Future<Null> _ensureLoggedIn() async {
+
   GoogleSignInAccount user = googleSignIn.currentUser;
+
   if (user == null) {
     user = await googleSignIn.signInSilently();
     print('Signed in silently');
@@ -34,15 +35,12 @@ Future<Null> _ensureLoggedIn() async {
     print('Didn\'t need to sign user in');
   }
 
-  if (await auth.currentUser() == null){
-    GoogleSignInAuthentication credentials =
-        await googleSignIn.currentUser.authentication;
-    await auth.signInWithGoogle(
-        idToken: credentials.idToken,
-        accessToken: credentials.accessToken
-    );
-  }
-
+//  if (await auth.currentUser() == null) {
+//    GoogleSignInAuthentication credentials =
+//        await googleSignIn.currentUser.authentication;
+//    await auth.signInWithGoogle(
+//        idToken: credentials.idToken, accessToken: credentials.accessToken);
+//  }
 }
 
 class MyApp extends StatelessWidget {
@@ -54,29 +52,29 @@ class MyApp extends StatelessWidget {
       theme: defaultTargetPlatform == TargetPlatform.iOS
           ? kIOSTheme
           : kDefaultTheme,
-      home: new MyHomePage(title: 'Kyn Home'),
+      home: new HomePage(title: 'Kyn Home'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
+  _HomePageState createState() => new _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-
+class _HomePageState extends State<HomePage> {
   bool _isLoggedIn = false;
 
-  Future<Null> ensureLoggedIn() async {
-    setState((){
+  Future<bool> ensureLoggedIn() async {
+    setState(() {
       _isLoggedIn = true;
     });
     await _ensureLoggedIn();
+    return true;
   }
 
   @override
@@ -94,9 +92,9 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.display1,
             ),
             new FlatButton(
-                onPressed: _ensureLoggedIn,
-                child: const Text('Sign In'),
-                color: Colors.green,
+              onPressed: _ensureLoggedIn,
+              child: const Text('Sign In'),
+              color: Colors.green,
             ),
           ],
         ),
