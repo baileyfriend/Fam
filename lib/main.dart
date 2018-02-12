@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 final ThemeData kIOSTheme = new ThemeData(
@@ -17,30 +18,27 @@ final ThemeData kDefaultTheme = new ThemeData(
 );
 
 final googleSignIn = new GoogleSignIn();
+final analytics = new FirebaseAnalytics();
 final auth = FirebaseAuth.instance;
 
 void main() => runApp(new MyApp());
 
 Future<Null> _ensureLoggedIn() async {
-
   GoogleSignInAccount user = googleSignIn.currentUser;
-
-  if (user == null) {
+  if (user == null)
     user = await googleSignIn.signInSilently();
-    print('Signed in silently');
-  } else if (user == null) {
+  if (user == null) {
     await googleSignIn.signIn();
-    print('signed user in');
-  } else {
-    print('Didn\'t need to sign user in');
+    analytics.logLogin();
   }
-
-//  if (await auth.currentUser() == null) {
-//    GoogleSignInAuthentication credentials =
-//        await googleSignIn.currentUser.authentication;
-//    await auth.signInWithGoogle(
-//        idToken: credentials.idToken, accessToken: credentials.accessToken);
-//  }
+  if (await auth.currentUser() == null) {
+    GoogleSignInAuthentication credentials =
+    await googleSignIn.currentUser.authentication;
+    await auth.signInWithGoogle(
+      idToken: credentials.idToken,
+      accessToken: credentials.accessToken,
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -67,14 +65,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _isLoggedIn = false;
+//  bool _isLoggedIn = false;
 
-  Future<bool> ensureLoggedIn() async {
-    setState(() {
-      _isLoggedIn = true;
-    });
+  Future<Null> ensureLoggedIn() async {
+//    setState(() {
+//      _isLoggedIn = true;
+//    });
     await _ensureLoggedIn();
-    return true;
   }
 
   @override
