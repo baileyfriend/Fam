@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
 
 
 final ThemeData kIOSTheme = new ThemeData(
@@ -16,24 +21,38 @@ final ThemeData kDefaultTheme = new ThemeData(
   accentColor: Colors.blueAccent[400],
 );
 
-final googleSignIn = new GoogleSignIn();
+final FirebaseAuth _auth = FirebaseAuth.instance;
+final GoogleSignIn _googleSignIn = new GoogleSignIn();
+
+
 
 void main() => runApp(new MyApp());
 
-Future<Null> _ensureLoggedIn() async {
-  GoogleSignInAccount user = googleSignIn.currentUser;
-  if (user == null){
-    user = await googleSignIn.signInSilently();
-    print('Signed in silently');
-  }
-  else if (user == null){
-    await googleSignIn.signIn();
-    print('signed user in');
-  } else{
-    print('Didn\'t need to sign user in');
-  }
+Future<String> _testSignInWithGoogle() async {
+  print('Testing');
+  final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
+  final GoogleSignInAuthentication googleAuth =
+  await googleUser.authentication;
+  print('Google User: $googleUser'); //Make sure it takes google  user
+  print('Google Auth $googleAuth');
+  final FirebaseUser user = await _auth.signInWithGoogle(
+    accessToken: googleAuth.accessToken,
+    idToken: googleAuth.idToken,
+  );
+  print('Made it');
+  assert(user.email != null);
+  print('Email: $user.email');
+  assert(user.displayName != null);
+  assert(!user.isAnonymous);
+  assert(await user.getIdToken() != null);
 
+
+  final FirebaseUser currentUser = await _auth.currentUser();
+  assert(user.uid == currentUser.uid);
+  print('This user signed in: $user');
+  return 'signInWithGoogle succeeded: $user';
 }
+
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -66,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState((){
       _isLoggedIn = true;
     });
-    await _ensureLoggedIn();
+    await _testSignInWithGoogle();
   }
 
   @override
@@ -84,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.display1,
             ),
             new FlatButton(
-                onPressed: _ensureLoggedIn,
+                onPressed: _testSignInWithGoogle,
                 child: const Text('Sign In'),
                 color: Colors.green,
             ),
