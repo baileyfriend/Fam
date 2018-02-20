@@ -315,7 +315,7 @@ packages:
   sky_engine:
     dependency: transitive
     description:
-      path: "..\\..\\..\\flutter\\bin\\cache\\pkg\\sky_engine"
+      path: "../../flutter/bin/cache/pkg/sky_engine"
       relative: true
     source: path
     version: "0.0.99"

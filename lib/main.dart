@@ -20,7 +20,6 @@ final ThemeData kDefaultTheme = new ThemeData(
   accentColor: Colors.blueAccent[400],
 );
 
-<<<<<<< HEAD
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
@@ -51,34 +50,7 @@ Future<String> _testSignInWithGoogle() async {
   assert(user.uid == currentUser.uid);
   print('This user signed in: $user');
   return 'signInWithGoogle succeeded: $user';
-=======
-final googleSignIn = new GoogleSignIn();
-final auth = FirebaseAuth.instance;
 
-void main() => runApp(new MyApp());
-
-Future<Null> _ensureLoggedIn() async {
-  GoogleSignInAccount user = googleSignIn.currentUser;
-  if (user == null) {
-    user = await googleSignIn.signInSilently();
-    print('Signed in silently');
-  } else if (user == null) {
-    await googleSignIn.signIn();
-    print('signed user in');
-  } else {
-    print('Didn\'t need to sign user in');
-  }
-
-  if (await auth.currentUser() == null){
-    GoogleSignInAuthentication credentials =
-        await googleSignIn.currentUser.authentication;
-    await auth.signInWithGoogle(
-        idToken: credentials.idToken,
-        accessToken: credentials.accessToken
-    );
-  }
-
->>>>>>> master
 }
 
 
