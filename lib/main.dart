@@ -96,9 +96,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
       final FirebaseUser currentUser = await _auth.currentUser();
       assert(user.uid == currentUser.uid);
-//  print('This user signed in: $user');
+
+      var userData = {'uid': user.uid,
+                      'email': user.email,
+                      'displayName': user.displayName};
+
+      Firestore.instance.collection('Users').document('user '+user.uid).setData(userData);
+      print('put data into cloud firestore');
+
     } catch(error){
-      print(error);
+      print("Caught error in _handleSignIn: " + error);
     }
   }
 
@@ -173,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child:
             new RaisedButton(
               child: new GoogleSignInWidget(),
-              padding: new EdgeInsets.all(0.0),
+              //padding: new EdgeInsets.all(0.0),
               color: Colors.transparent,
               onPressed: _handleSignIn,
             ),
@@ -435,6 +442,12 @@ class FamilyPage extends StatefulWidget{
   _FamilyPageState createState() => new _FamilyPageState();
 }
 class _FamilyPageState extends State<FamilyPage> {
+
+
+  void addUserToFamily(){
+
+  }
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -442,6 +455,21 @@ class _FamilyPageState extends State<FamilyPage> {
       appBar: new AppBar(
         title: new Text("Family"),
       ),
+      // Get list of family members and put into listview
+      body: new StreamBuilder<QuerySnapshot>(
+        stream: Firestore.instance.collection("Family").snapshots,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return new Text("Loading...");
+          return new ListView(
+            children: snapshot.data.documents.map((document){
+              return new ListTile(
+                title: new Text("Your family members are: "),
+                subtitle: new Text(document['familyMembers']),
+              );
+            }).toList(),
+          );
+        }
+      )
     );
   }
 }
@@ -472,7 +500,7 @@ class _HubPageState extends State<HubPage>{
     // TODO: implement build
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text("The Hub"),
+
       ),
     );
   }
