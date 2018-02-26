@@ -448,6 +448,35 @@ class _FamilyPageState extends State<FamilyPage> {
 
   }
 
+
+  Future<Null> _addUserButtonPressed() async { // @TODO implement this >>>
+    switch (await showDialog<user>(
+      context: context,
+      child: new SimpleDialog(
+        title: const Text('Select assignment'),
+        children: <Widget>[
+          new SimpleDialogOption(
+            onPressed: () { Navigator.pop(context, Department.treasury); },
+            child: const Text('Treasury department'),
+          ),
+          new SimpleDialogOption(
+            onPressed: () { Navigator.pop(context, Department.state); },
+            child: const Text('State department'),
+          ),
+        ],
+      ),
+    )) {
+      case Department.treasury:
+      // Let's go.
+      // ...
+        break;
+      case Department.state:
+      // ...
+        break;
+    }
+  } // @TODO implement this ^^^
+
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -469,7 +498,10 @@ class _FamilyPageState extends State<FamilyPage> {
             }).toList(),
           );
         }
-      )
+      ),
+      floatingActionButton: new FloatingActionButton(
+        onPressed: addUserToFamily,
+      ),
     );
   }
 }
