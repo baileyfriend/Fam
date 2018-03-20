@@ -8,6 +8,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kyn/widgets.dart';
+import 'package:calendar/calendar.dart';
+import 'package:googleapis/calendar/v3.dart' as cal;
+
 
 
 
@@ -173,7 +176,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child:
             new RaisedButton(
               child: new GoogleSignInWidget(),
-              padding: new EdgeInsets.all(0.0),
+              //padding: new EdgeInsets.all(0.0),
               color: Colors.transparent,
               onPressed: _handleSignIn,
             ),
@@ -366,10 +369,13 @@ class _LoggedInPageState extends State<LoggedInPage> {
 }
 
 class CalendarPage extends StatefulWidget{
+
   @override
   _CalendarPageState createState() => new _CalendarPageState();
 }
 class _CalendarPageState extends State<CalendarPage>{
+
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -393,13 +399,30 @@ class _QuestionsPageState extends State<QuestionsPage>{
       appBar: new AppBar(
         title: new Text("Questions"),
       ),
+        body: new StreamBuilder<QuerySnapshot>(
+            stream: Firestore.instance.collection("questions").snapshots,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return new Text("Loading...");
+              return new ListView(
+                children: snapshot.data.documents.map((document){
+                  return new ListTile(
+                    title: new Text(document['q']),
+                    subtitle: new Text(document['a'])
+                  );
+                }).toList(),
+
+              );
+            }
+        )
     );
   }
 }
 
 class RulesPage extends StatefulWidget{
+
   @override
   _RulesPageState createState() => new _RulesPageState();
+
 
 }
 class _RulesPageState extends State<RulesPage>{
@@ -410,6 +433,23 @@ class _RulesPageState extends State<RulesPage>{
       appBar: new AppBar(
         title: new Text("Rules"),
       ),
+        body: new StreamBuilder<QuerySnapshot>(
+            stream: Firestore.instance.collection("discipline").snapshots,
+
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return new Text("Loading...");
+              return new ListView(
+                children: snapshot.data.documents.map((document){
+                  return new ListTile(
+                    title: new Text("Rule: "),
+                    subtitle: new Text(document['rule']),
+                  );
+                }).toList(),
+
+              );
+            }
+        )
+
     );
   }
 }
@@ -438,12 +478,30 @@ class _FamilyPageState extends State<FamilyPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
+
     return new Scaffold(
       appBar: new AppBar(
         title: new Text("Family"),
       ),
+      body: new StreamBuilder<QuerySnapshot>(
+          stream: Firestore.instance.collection("Family").snapshots,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return new Text("Loading...");
+            return new ListView(
+              children: snapshot.data.documents.map((document){
+                return new ListTile(
+                  title: new Text("Your family members are: "),
+                  subtitle: new Text(document['familyMembers']),
+                );
+              }).toList(),
+
+            );
+          }
+      )
+
     );
   }
+
 }
 
 class ResourcesPage extends StatefulWidget{
