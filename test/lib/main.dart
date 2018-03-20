@@ -173,7 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child:
             new RaisedButton(
               child: new GoogleSignInWidget(),
-              padding: new EdgeInsets.all(0.0),
+              // padding: new EdgeInsets.all(0.0),
               color: Colors.transparent,
               onPressed: _handleSignIn,
             ),

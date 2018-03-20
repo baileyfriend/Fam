@@ -10,6 +10,35 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kyn/widgets.dart';
 
 
+class User {
+
+  String uid;
+  String email;
+  String displayName;
+
+
+  User(){//String uid, String email, String displayName) {
+//    this.uid = uid;
+//    this.email = email;
+//    this.displayName = displayName;
+  }
+
+  void setUid(String uid){
+    this.uid = uid;
+  }
+
+  void setEmail(String email){
+    this.email = email;
+  }
+
+  void setDisplayName(String displayName){
+    this.displayName = displayName;
+  }
+
+
+}
+
+User me = new User();
 
 // iOS Default Theme
 final ThemeData kIOSTheme = new ThemeData(
@@ -27,6 +56,8 @@ final ThemeData kDefaultTheme = new ThemeData(
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
+;
+
 // Main
 void main() => runApp(new MyApp());
 
@@ -35,6 +66,7 @@ void main() => runApp(new MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
     return new MaterialApp(
       title: 'Kyn',
       theme: defaultTargetPlatform == TargetPlatform.iOS
@@ -101,11 +133,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       'email': user.email,
                       'displayName': user.displayName};
 
+
+      me.setUid(user.uid);
+      me.setEmail(user.email);
+      me.setDisplayName(user.displayName);
       Firestore.instance.collection('Users').document('user '+user.uid).setData(userData);
       print('put data into cloud firestore');
 
     } catch(error){
-      print("Caught error in _handleSignIn: " + error);
+      print(error.toString());
     }
   }
 
@@ -449,59 +485,87 @@ class _FamilyPageState extends State<FamilyPage> {
   }
 
 
-  Future<Null> _addUserButtonPressed() async { // @TODO implement this >>>
-    switch (await showDialog<user>(
-      context: context,
-      child: new SimpleDialog(
-        title: const Text('Select assignment'),
-        children: <Widget>[
-          new SimpleDialogOption(
-            onPressed: () { Navigator.pop(context, Department.treasury); },
-            child: const Text('Treasury department'),
-          ),
-          new SimpleDialogOption(
-            onPressed: () { Navigator.pop(context, Department.state); },
-            child: const Text('State department'),
-          ),
-        ],
-      ),
-    )) {
-      case Department.treasury:
-      // Let's go.
-      // ...
-        break;
-      case Department.state:
-      // ...
-        break;
-    }
-  } // @TODO implement this ^^^
+//  Future<Null> _addUserButtonPressed() async { // @TODO implement this >>>
+//    await showDialog<user>(
+//      context: context,
+//      child: new TextField(
+//
+//        decoration: new InputDecoration(
+//          hintText: 'Enter email of user you would like to add to the family',
+//        )
+//      ),
+//    )
+//  } // @TODO implement this ^^^
 
 
   @override
   Widget build(BuildContext context) {
+
+    final TextEditingController _controller = new TextEditingController();
     // TODO: implement build
     return new Scaffold(
       appBar: new AppBar(
         title: new Text("Family"),
       ),
       // Get list of family members and put into listview
-      body: new StreamBuilder<QuerySnapshot>(
-        stream: Firestore.instance.collection("Family").snapshots,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return new Text("Loading...");
-          return new ListView(
-            children: snapshot.data.documents.map((document){
-              return new ListTile(
-                title: new Text("Your family members are: "),
-                subtitle: new Text(document['familyMembers']),
-              );
-            }).toList(),
-          );
-        }
-      ),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: addUserToFamily,
-      ),
+      body: new Column(
+        children: <Widget>[
+//          new StreamBuilder<QuerySnapshot>(
+//            stream: Firestore.instance.collection("Family").snapshots,
+//            builder: (context, snapshot) {
+//              if (!snapshot.hasData) return new Text("Loading...");
+//              return new ListView(
+//                children: snapshot.data.documents.map((document){
+//                  return new ListTile(
+//                    title: new Text("Your family members are: "),
+//                    subtitle: new Text(document['familyMembers']),
+//                  );
+//                }).toList(),
+//              );
+//            }
+//        ),
+        new Card(
+          child: new Column(
+            children: <Widget>[
+              new TextField(
+                controller: _controller,
+                decoration: new InputDecoration(
+                  hintText: "Enter email of user you'd like to add to your family"
+                )
+              ),
+              new FlatButton(
+                  onPressed: () async {
+                    final FirebaseUser currentUser = await _auth.currentUser();
+                    var data = {
+                      'familyMembers':{
+                        'email': _controller.text.toString()
+                      }
+                    };
+                    print('My uid is : ' + me.uid);
+                    Firestore.instance.collection('Users').document('user ' + me.uid).setData(data);
+                    _controller.text = 'Submitted. Add another user?';
+                  },
+                  child: const Text('Submit')
+              )
+            ],
+          ),
+//          child: new TextField(
+//            controller: _controller,
+//            decoration: new InputDecoration(
+//              hintText: "Enter email of user you'd like to add to your family"
+//            ),
+//          ),
+//          new RaisedButton(
+//                onPressed: (){
+//                  var data = {
+//                    'email': _controller.text.toString()
+//                  }; // @TODO figure out why there's an error with the column
+//                  Firestore.instance.collection('Family').document().setData(data);
+//                }
+//            )
+        )
+        ]
+      )
     );
   }
 }
