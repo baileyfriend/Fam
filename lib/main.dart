@@ -134,10 +134,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       'displayName': user.displayName};
 
 
-      me.setUid(user.uid);
-      me.setEmail(user.email);
-      me.setDisplayName(user.displayName);
+//      me.setUid(user.uid);
+//      me.setEmail(user.email);
+//      me.setDisplayName(user.displayName);
       Firestore.instance.collection('Users').document('user '+user.uid).setData(userData);
+
+
+
       print('put data into cloud firestore');
 
     } catch(error){
@@ -479,10 +482,51 @@ class FamilyPage extends StatefulWidget{
 }
 class _FamilyPageState extends State<FamilyPage> {
 
+  GoogleSignInAccount _currentUser;
+
+  @override
+  void initState(){
+    super.initState();
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
+      setState((){
+        _currentUser = account;
+      });
+    });
+    _googleSignIn.signInSilently();
+  }
 
   void addUserToFamily(){
+    var familyData = {
+      'familyMembers': {
+        'name': '',
+        'email': '',
+        'rules': []
+      },
+
+      'resources': {
+        'name': '',
+        'phoneNumber': '',
+        'address': '',
+        'email': ''
+      },
+
+      'questions': {
+        'asker': '',
+        'question': '',
+        'answer': ''
+      },
+
+      'rules': []
+
+    };
+    Firestore.instance.collection('Families').document(_currentUser.uid).setData(familyData);
+  }
+
+  Future <null> checkIfDocExists(String email) async {
 
   }
+
+
 
 
 //  Future<Null> _addUserButtonPressed() async { // @TODO implement this >>>
@@ -501,7 +545,8 @@ class _FamilyPageState extends State<FamilyPage> {
   @override
   Widget build(BuildContext context) {
 
-    final TextEditingController _controller = new TextEditingController();
+    final TextEditingController _emailController = new TextEditingController();
+    final TextEditingController _passwordController = new TextEditingController();
     // TODO: implement build
     return new Scaffold(
       appBar: new AppBar(
@@ -528,22 +573,44 @@ class _FamilyPageState extends State<FamilyPage> {
           child: new Column(
             children: <Widget>[
               new TextField(
-                controller: _controller,
+                controller: _emailController,
                 decoration: new InputDecoration(
-                  hintText: "Enter email of user you'd like to add to your family"
+                  hintText: "Enter email of head of household"
                 )
               ),
+              new TextField(
+              controller: _passwordController,
+              decoration: new InputDecoration(
+                  hintText: "Enter password set by head of household"
+              )
+        ),
               new FlatButton(
                   onPressed: () async {
-                    final FirebaseUser currentUser = await _auth.currentUser();
-                    var data = {
-                      'familyMembers':{
-                        'email': _controller.text.toString()
-                      }
-                    };
+                    // final FirebaseUser currentUser = await _auth.currentUser();
+//                    var data = {
+//                      'familyMembers':{
+//                        'email': _controller.text.toString()
+//                      }
+//                    };
                     print('My uid is : ' + me.uid);
-                    Firestore.instance.collection('Users').document('user ' + me.uid).setData(data);
-                    _controller.text = 'Submitted. Add another user?';
+
+                    Firestore.instance.collection('Family').document(_emailController.text).get()
+                        .catchError((err)  {
+                      _emailController.text = 'You entered a wrong email';
+                    })
+                    .then((doc) {
+                        print(doc);
+//                        var data = doc.getData();// @TODO get the data.
+//                        if (doc.password == _passwordController.text) // @TODO hash the pw
+//                        data = {
+//                          'familyMembers':
+//                          {
+//                            'name': _currentUser.displayName
+//                          }
+//                        };
+//                        Firestore.instance.collection('Family').document(_emailController.text).setData(data);
+                    });
+
                   },
                   child: const Text('Submit')
               )
