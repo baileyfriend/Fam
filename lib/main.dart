@@ -56,7 +56,6 @@ final ThemeData kDefaultTheme = new ThemeData(
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
-;
 
 // Main
 void main() => runApp(new MyApp());
@@ -495,36 +494,36 @@ class _FamilyPageState extends State<FamilyPage> {
     _googleSignIn.signInSilently();
   }
 
-  void addUserToFamily(){
-    var familyData = {
-      'familyMembers': {
-        'name': '',
-        'email': '',
-        'rules': []
-      },
+//  void addUserToFamily(){
+//    var familyData = {
+//      'familyMembers': {
+//        'name': '',
+//        'email': '',
+//        'rules': []
+//      },
+//
+//      'resources': {
+//        'name': '',
+//        'phoneNumber': '',
+//        'address': '',
+//        'email': ''
+//      },
+//
+//      'questions': {
+//        'asker': '',
+//        'question': '',
+//        'answer': ''
+//      },
+//
+//      'rules': []
+//
+//    };
+//    Firestore.instance.collection('Families').document(_currentUser.uid).setData(familyData);
+//  }
 
-      'resources': {
-        'name': '',
-        'phoneNumber': '',
-        'address': '',
-        'email': ''
-      },
-
-      'questions': {
-        'asker': '',
-        'question': '',
-        'answer': ''
-      },
-
-      'rules': []
-
-    };
-    Firestore.instance.collection('Families').document(_currentUser.uid).setData(familyData);
-  }
-
-  Future <null> checkIfDocExists(String email) async {
-
-  }
+//  Future <null> checkIfDocExists(String email) async {
+//
+//  }
 
 
 
