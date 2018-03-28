@@ -6,6 +6,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:kyn/widgets.dart';
 import 'package:kyn/hubpage.dart';
 import 'package:kyn/platform_adaptive.dart';

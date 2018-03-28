@@ -7,17 +7,67 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:kyn/platform_adaptive.dart';
 
 
+class MessageList extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return new StreamBuilder<QuerySnapshot>(
+      stream: Firestore.instance.collection('Messages').snapshots,
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (!snapshot.hasData) return const Text('Loading...');
+        return new ListView(
+          children: snapshot.data.documents.map((DocumentSnapshot document) {
+            return new ListTile(
+              title: new Text(document['title']),
+              subtitle: new Text(document['text']),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
 
-class HubPage extends StatefulWidget{
+class HubPage extends StatelessWidget{
+  CollectionReference get Messages => Firestore.instance.collection('Messages');
+
+  Future<Null> _addMessage() async{
+    Firestore.instance
+      .collection('Messages')
+      .document()
+      .setData(<String, String>{
+        'title': 'title stuff',
+        'text': 'Demo text for message'
+      });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      appBar: new AppBar(
+        title: const Text('Messages List Demo'),
+      ),
+      body: new MessageList(),
+      floatingActionButton: new FloatingActionButton(
+        onPressed: _addMessage,
+          tooltip: 'Increment',
+          child: new Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class HubPage_ extends StatefulWidget{
   @override
   State createState() => new HubPageState();
 }
 
-class HubPageState extends State<HubPage> with TickerProviderStateMixin {
+class HubPageState extends State<HubPage_> with TickerProviderStateMixin {
   List<ChatMessage> _messages = [];
   DatabaseReference _messagesReference = FirebaseDatabase.instance.reference();
   TextEditingController _textController = new TextEditingController();
@@ -59,8 +109,10 @@ class HubPageState extends State<HubPage> with TickerProviderStateMixin {
     _textController.clear();
     _googleSignIn.signIn().then((user) {
       var message = {
-        'sender': {'name': user.displayName, 'imageUrl': user.photoUrl},
-        'text': text,
+        'sender': {
+          'name': user.displayName,
+          'imageUrl': user.photoUrl},
+          'text': text,
       };
       _messagesReference.push().set(message);
     });
@@ -259,4 +311,6 @@ class ChatMessageContent extends StatelessWidget {
     } else
       return new Text(message.text);
   }
+
 }
+
