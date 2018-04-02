@@ -12,7 +12,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kyn/platform_adaptive.dart';
 
-
+// Message list for FireStore
 class MessageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -33,6 +33,7 @@ class MessageList extends StatelessWidget {
   }
 }
 
+// Firestore
 class HubPage extends StatelessWidget{
   CollectionReference get Messages => Firestore.instance.collection('Messages');
 
@@ -62,11 +63,13 @@ class HubPage extends StatelessWidget{
   }
 }
 
+// Live Database
 class HubPage_ extends StatefulWidget{
   @override
   State createState() => new HubPageState();
 }
 
+// Live Database
 class HubPageState extends State<HubPage_> with TickerProviderStateMixin {
   List<ChatMessage> _messages = [];
   DatabaseReference _messagesReference = FirebaseDatabase.instance.reference();
