@@ -50,7 +50,7 @@ class HubPage extends StatelessWidget{
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: const Text('Messages List Demo'),
+        title: const Text('Firestore Demo'),
       ),
       body: new MessageList(),
       floatingActionButton: new FloatingActionButton(
