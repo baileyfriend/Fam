@@ -10,7 +10,9 @@ dependencies:
   firebase_database: "^0.4.0"
   firebase_storage: "^0.2.0"
   image_picker: "^0.3.1"
-
+  googleapis_auth: "^0.2.4"
+  googleapis: "^0.50.0"
+  calendar: "0.0.3"
 
 
   # The following adds the Cupertino Icons font to your application.
