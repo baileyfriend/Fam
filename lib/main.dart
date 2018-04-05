@@ -7,7 +7,10 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:kyn/widgets.dart';
+import 'package:kyn/hubpage.dart';
+import 'package:kyn/platform_adaptive.dart';
 
 
 class User {
@@ -652,18 +655,20 @@ class _ResourcesPageState extends State<ResourcesPage>{
   }
 }
 
-class HubPage extends StatefulWidget{
-  _HubPageState createState() => new _HubPageState();
-}
 
-class _HubPageState extends State<HubPage>{
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return new Scaffold(
-      appBar: new AppBar(
+//class HubPage extends StatefulWidget{
+//  _HubPageState createState() => new _HubPageState();
+//}
+//
+//class _HubPageState extends State<HubPage>{
+//  @override
+//  Widget build(BuildContext context) {
+//    return new Scaffold(
+//      appBar: new AppBar(
+//        title: new Text("The Hub"),
+//      ),
+//      body: new ChatScreen(),
+//    );
+//  }
+//}
 
-      ),
-    );
-  }
-}

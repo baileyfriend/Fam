@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "2227716459-l3njvu1dr20rfntnrj9qsu6co2hf318s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kynco.kyn",
+            "certificate_hash": "e5a980b858e79f267cee98ec5b1c721f3b8101da"
+          }
+        },
+        {
           "client_id": "2227716459-18icog4oh0o466v2n52ubuuqjf2ot1jp.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -81,6 +89,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "2227716459-vidtgf52opp9e9mn0tsipq5arb8rdl5o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kyn",
+            "certificate_hash": "78afdc8a9b4d2d9b1c0af0e872820d0edad86af7"
+          }
+        },
+        {
+          "client_id": "2227716459-5cs6a79vrarkpgs9kc9o9hmes8rv57iq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kyn",
+            "certificate_hash": "e5a980b858e79f267cee98ec5b1c721f3b8101da"
+          }
+        },
         {
           "client_id": "2227716459-o9a86rss36g2dbu8d9nro0vanj1i43dg.apps.googleusercontent.com",
           "client_type": 1,
