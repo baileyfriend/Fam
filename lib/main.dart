@@ -25,26 +25,20 @@ class User {
 
   void setUid(String uid){
     this.uid = uid;
-    print('Set uid to $uid \n\n\n');
   }
 
   void setEmail(String email){
     this.email = email;
-    print('Set email to $email \n\n\n');
   }
 
   void setDisplayName(String displayName){
     this.displayName = displayName;
-    print('Set displayName to $displayName \n\n\n');
   }
 
 
 }
 
 User me = new User();
-FirebaseUser theUser;
-String headOfHouseholdEmail;
-
 
 // iOS Default Theme
 final ThemeData kIOSTheme = new ThemeData(
@@ -61,9 +55,6 @@ final ThemeData kDefaultTheme = new ThemeData(
 // Create Firebase & Google account objects
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final GoogleSignIn _googleSignIn = new GoogleSignIn();
-
-
-
 
 
 // Main
@@ -91,13 +82,10 @@ class MyApp extends StatelessWidget {
         "/FamilyPage": (BuildContext context) => new FamilyPage(),
         "/ResourcesPage": (BuildContext context) => new ResourcesPage(),
         "/HubPage": (BuildContext context) => new HubPage(),
-        "/Family/HeadOfHouseholdPage": (BuildContext context) => new HeadOfHouseholdPage(),
       }
     );
   }
 }
-
-
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -125,11 +113,12 @@ class _MyHomePageState extends State<MyHomePage> {
     try{
       final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+//  print('Google User: $googleUser'); //Make sure it takes google  user
+//  print('Google Auth $googleAuth');
       final FirebaseUser user = await _auth.signInWithGoogle(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      theUser = user;
       // Assures user information has been obtained
       assert(user.email != null);
       assert(user.displayName != null);
@@ -144,10 +133,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       'displayName': user.displayName};
 
 
-      me.setUid(user.uid);
-      me.setEmail(user.email);
-      me.setDisplayName(user.displayName);
-      print(me.toString());
+//      me.setUid(user.uid);
+//      me.setEmail(user.email);
+//      me.setDisplayName(user.displayName);
       Firestore.instance.collection('Users').document('user '+user.uid).setData(userData);
 
 
@@ -496,40 +484,62 @@ class _FamilyPageState extends State<FamilyPage> {
   GoogleSignInAccount _currentUser;
 
   @override
-  @protected
-  @mustCallSuper
   void initState(){
     super.initState();
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
       setState((){
         _currentUser = account;
-        print('GOT THE FUCKING EMAIL: ' + _currentUser.email);
       });
     });
-    _googleSignIn.signInSilently()
-    .then((account) {
-      _currentUser = account;
-      print('the current user is: ' + _currentUser.toString());
-    });
+    _googleSignIn.signInSilently();
   }
 
+//  void addUserToFamily(){
+//    var familyData = {
+//      'familyMembers': {
+//        'name': '',
+//        'email': '',
+//        'rules': []
+//      },
+//
+//      'resources': {
+//        'name': '',
+//        'phoneNumber': '',
+//        'address': '',
+//        'email': ''
+//      },
+//
+//      'questions': {
+//        'asker': '',
+//        'question': '',
+//        'answer': ''
+//      },
+//
+//      'rules': []
+//
+//    };
+//    Firestore.instance.collection('Families').document(_currentUser.uid).setData(familyData);
+//  }
 
-  Future<Null> _switchHeadOfHouseholdPage() async{
-    if(_currentUser != null){
-      Navigator.of(context).pushNamed("/Family/HeadOfHouseholdPage");
-    }
-  }
+//  Future <null> checkIfDocExists(String email) async {
+//
+//  }
 
-  Future<String> getPassword(String email) async {
-    DocumentSnapshot snapshot = await Firestore.instance.collection('Family').document('freund.bailey@gmail.com').get();
-    var pw = snapshot['password'];
-    if (pw is String) {
-      print('The pw is : ' + pw);
-      return pw;
-    } else {
-    throw 'didnt work';
-    }
-  }
+
+
+
+//  Future<Null> _addUserButtonPressed() async { // @TODO implement this >>>
+//    await showDialog<user>(
+//      context: context,
+//      child: new TextField(
+//
+//        decoration: new InputDecoration(
+//          hintText: 'Enter email of user you would like to add to the family',
+//        )
+//      ),
+//    )
+//  } // @TODO implement this ^^^
+
 
   @override
   Widget build(BuildContext context) {
@@ -544,6 +554,20 @@ class _FamilyPageState extends State<FamilyPage> {
       // Get list of family members and put into listview
       body: new Column(
         children: <Widget>[
+//          new StreamBuilder<QuerySnapshot>(
+//            stream: Firestore.instance.collection("Family").snapshots,
+//            builder: (context, snapshot) {
+//              if (!snapshot.hasData) return new Text("Loading...");
+//              return new ListView(
+//                children: snapshot.data.documents.map((document){
+//                  return new ListTile(
+//                    title: new Text("Your family members are: "),
+//                    subtitle: new Text(document['familyMembers']),
+//                  );
+//                }).toList(),
+//              );
+//            }
+//        ),
         new Card(
           child: new Column(
             children: <Widget>[
@@ -561,127 +585,53 @@ class _FamilyPageState extends State<FamilyPage> {
         ),
               new FlatButton(
                   onPressed: () async {
-                    var pw = await getPassword(_emailController.text);
-                    print(pw);
+                    // final FirebaseUser currentUser = await _auth.currentUser();
+//                    var data = {
+//                      'familyMembers':{
+//                        'email': _controller.text.toString()
+//                      }
+//                    };
+                    print('My uid is : ' + me.uid);
 
-                    if (pw == _passwordController.text) { // @TODO hash the pw
-                      var data = {
-                        'familyMembers':
-                        {
-                          'name': _currentUser.displayName
-                        }
-                      };
+                    Firestore.instance.collection('Family').document(_emailController.text).get()
+                        .catchError((err)  {
+                      _emailController.text = 'You entered a wrong email';
+                    })
+                    .then((doc) {
+                        print(doc);
+//                        var data = doc.getData();// @TODO get the data.
+//                        if (doc.password == _passwordController.text) // @TODO hash the pw
+//                        data = {
+//                          'familyMembers':
+//                          {
+//                            'name': _currentUser.displayName
+//                          }
+//                        };
+//                        Firestore.instance.collection('Family').document(_emailController.text).setData(data);
+                    });
 
-                      headOfHouseholdEmail = _emailController.text;
-
-                      try {
-                        Firestore.instance.collection('Family').document(
-                            headOfHouseholdEmail.toLowerCase())
-                            .updateData(data);
-                      } catch ( e ) {
-                        print(e);
-                      }
-                    }
                   },
                   child: const Text('Submit')
-              ),
-              new FlatButton(
-                onPressed: _switchHeadOfHouseholdPage,
-                child: const Text('I am head of household'),
-              ),
-              //new Text(_currentUser.email)
+              )
             ],
           ),
+//          child: new TextField(
+//            controller: _controller,
+//            decoration: new InputDecoration(
+//              hintText: "Enter email of user you'd like to add to your family"
+//            ),
+//          ),
+//          new RaisedButton(
+//                onPressed: (){
+//                  var data = {
+//                    'email': _controller.text.toString()
+//                  }; // @TODO figure out why there's an error with the column
+//                  Firestore.instance.collection('Family').document().setData(data);
+//                }
+//            )
         )
         ]
       )
-    );
-  }
-}
-
-
-class HeadOfHouseholdPage extends StatefulWidget{
-  _HeadOfHouseholdPageState createState() => new _HeadOfHouseholdPageState();
-}
-
-class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
-  final TextEditingController _passwordController = new TextEditingController();
-  GoogleSignInAccount _currentUser;
-  @override
-  @protected
-  @mustCallSuper
-  void initState(){
-    super.initState();
-    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
-      setState((){
-        _currentUser = account;
-      });
-    });
-    _googleSignIn.signInSilently()
-        .then((account) {
-      _currentUser = account;
-      print('the current user is: ' + _currentUser.toString());
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return new Scaffold(
-      appBar: new AppBar(
-
-      ),
-
-        body: new Column(
-            children: <Widget>[
-              new Card(
-                child: new Column(
-                  children: <Widget>[
-                    new TextField(
-                        controller: _passwordController,
-                        decoration: new InputDecoration(
-                            hintText: "Enter password set by head of household"
-                        )
-                    ),
-                    new FlatButton(
-                        onPressed: () async {
-                          var familyData = {
-                              'password': _passwordController.text,
-                              'familyMembers': {
-                                'name': '',
-                                'email': '',
-                                'rules': []
-                              },
-                        
-                              'resources': {
-                                'name': '',
-                                'phoneNumber': '',
-                                'address': '',
-                                'email': ''
-                              },
-                        
-                              'questions': {
-                                'asker': '',
-                                'question': '',
-                                'answer': ''
-                              },
-                        
-                              'rules': []
-                        
-                            };
-
-                          Firestore.instance
-                              .collection('Family')
-                              .document(_currentUser.email)
-                              .setData(familyData);
-                        },
-                        child: const Text('Submit')
-                    )
-                  ],
-                ),
-              )
-            ]
-        )
     );
   }
 }
@@ -717,4 +667,3 @@ class _HubPageState extends State<HubPage>{
     );
   }
 }
-
