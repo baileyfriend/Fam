@@ -14,63 +14,197 @@ import 'package:kyn/platform_adaptive.dart';
 
 // Message list for FireStore
 class MessageList extends StatelessWidget {
+
+  Future<Null> _printStuff() async{
+    print("TAPPED\n");
+  }
+
   @override
   Widget build(BuildContext context) {
     return new StreamBuilder<QuerySnapshot>(
       stream: Firestore.instance.collection('Messages').snapshots,
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (!snapshot.hasData) return const Text('Loading...');
-        return new ListView(
-          children: snapshot.data.documents.map((DocumentSnapshot document) {
-            return new ListTile(
-              title: new Text(document['title']),
-              subtitle: new Text(document['text']),
-            );
-          }).toList(),
+        return new Flexible(
+          child:
+          new ListView(
+            children: snapshot.data.documents.map((DocumentSnapshot document) {
+              return new ListTile(
+                  leading: new CircleAvatar(backgroundImage: new NetworkImage(document['userImgUrl'])),
+                  title: new Text(document['sender']),
+                  subtitle: new Text(document['text']),
+                  onTap: () {
+                    print("Tapped\n");
+                  }
+              );
+            }).toList(),
+          )
         );
       },
     );
   }
 }
 
+
 // Firestore
-class HubPage extends StatelessWidget{
+class HubPage extends StatefulWidget{
+//  CollectionReference get Messages => Firestore.instance.collection('Messages');
+//
+//  Future<Null> _addMessage() async{
+//    Firestore.instance
+//      .collection('Messages')
+//      .document()
+//      .setData(<String, String>{
+//        'title': 'title stuff',
+//        'text': 'Demo text for message'
+//      });
+//  }
+//
+//  @override
+//  Widget build(BuildContext context) {
+//    return new Scaffold(
+//      appBar: new AppBar(
+//        title: const Text('Firestore Demo'),
+//      ),
+//      body: new MessageList(),
+//      floatingActionButton: new FloatingActionButton(
+//        onPressed: _addMessage,
+//          tooltip: 'Increment',
+//          child: new Icon(Icons.add),
+//      ),
+//    );
+//  }
+
+  @override
+  State createState() => new HubPageState();
+}
+
+class HubPageState extends State<HubPage> with TickerProviderStateMixin{
   CollectionReference get Messages => Firestore.instance.collection('Messages');
+  TextEditingController _textController = new TextEditingController();
+  bool _isComposing = false;
+  GoogleSignIn _googleSignIn = new GoogleSignIn();
 
   Future<Null> _addMessage() async{
+    var account = await _googleSignIn.signIn();
     Firestore.instance
       .collection('Messages')
       .document()
       .setData(<String, String>{
-        'title': 'title stuff',
-        'text': 'Demo text for message'
+      'title': 'title stuff',
+      'text': 'Demo text for message',
+      'sender': account.displayName,
+    });
+  }
+
+  Future<Null> _handlePhotoButtonPressed() async {
+//    var account = await _googleSignIn.signIn();
+//    var imageFile = await ImagePicker.pickImage();
+//    var random = new Random().nextInt(10000);
+//    var ref = FirebaseStorage.instance.ref().child('image_$random.jpg');
+//    var uploadTask = ref.put(imageFile);
+//    var textOverlay = "";
+////    await Navigator.push(context, new TypeMemeRoute(imageFile));
+//    if (textOverlay == null) return;
+//    var downloadUrl = (await uploadTask.future).downloadUrl;
+//    var message = {
+//      'sender': {'name': account.displayName, 'imageUrl': account.photoUrl},
+//      'imageUrl': downloadUrl.toString(),
+//      'textOverlay': textOverlay,
+//    };
+//    _messagesReference.push().set(message);
+    print("Photo Button Pressed\n");
+  }
+
+  void _handleMessageChanged(String text) {
+    setState(() {
+      _isComposing = text.length > 0;
+    });
+  }
+
+  void _handleSubmitted(String text) {
+    _textController.clear();
+    _googleSignIn.signIn().then((user) {
+      Firestore.instance
+          .collection('Messages')
+          .document()
+          .setData(<String, String>{
+        'text': text,
+        'sender': user.displayName,
+        'userImgUrl': user.photoUrl,
       });
+    });
+  }
+
+  Widget _buildTextComposer() {
+    return new IconTheme(
+        data: new IconThemeData(color: Theme.of(context).accentColor),
+        child: new PlatformAdaptiveContainer(
+            margin: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: new Row(children: [
+              new Container(
+                margin: new EdgeInsets.symmetric(horizontal: 4.0),
+                child: new IconButton(
+                  icon: new Icon(Icons.photo),
+                  onPressed: _handlePhotoButtonPressed,
+                ),
+              ),
+              new Flexible(
+                child: new TextField(
+                  controller: _textController,
+                  onSubmitted: _handleSubmitted,
+                  onChanged: _handleMessageChanged,
+                  decoration:
+                  new InputDecoration.collapsed(hintText: 'Send a message'),
+                ),
+              ),
+              new Container(
+                  margin: new EdgeInsets.symmetric(horizontal: 4.0),
+                  child: new PlatformAdaptiveButton(
+                    icon: new Icon(Icons.send),
+                    onPressed: _isComposing
+                        ? () => _handleSubmitted(_textController.text)
+                        : null,
+                    child: new Text('Send'),
+                  )),
+            ])));
   }
 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: const Text('Firestore Demo'),
+        title: const Text('Firestore Demo2'),
       ),
-      body: new MessageList(),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: _addMessage,
-          tooltip: 'Increment',
-          child: new Icon(Icons.add),
-      ),
+      body:
+        new Column( children: [
+        new MessageList(),
+        new Divider(height: 1.0),
+        new Container(
+            decoration: new BoxDecoration(color: Theme.of(context).cardColor),
+            child: _buildTextComposer()),
+      ],)
+//        new MessageList(),
+//        floatingActionButton: new FloatingActionButton(
+//          onPressed: _addMessage,
+//          tooltip: 'Increment',
+//          child: new Icon(Icons.add),
+//        ),
     );
   }
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+
 // Live Database
 class HubPage_ extends StatefulWidget{
   @override
-  State createState() => new HubPageState();
+  State createState() => new HubPageState_();
 }
 
 // Live Database
-class HubPageState extends State<HubPage_> with TickerProviderStateMixin {
+class HubPageState_ extends State<HubPage_> with TickerProviderStateMixin {
   List<ChatMessage> _messages = [];
   DatabaseReference _messagesReference = FirebaseDatabase.instance.reference();
   TextEditingController _textController = new TextEditingController();
@@ -82,15 +216,15 @@ class HubPageState extends State<HubPage_> with TickerProviderStateMixin {
     super.initState();
     _googleSignIn.signInSilently();
     FirebaseAuth.instance.signInAnonymously().then((user) {
-      _messagesReference.onChildAdded.listen((Event event) {
-        var val = event.snapshot.value;
-        _addMessage(
-            name: val['sender']['name'],
-            senderImageUrl: val['sender']['imageUrl'],
-            text: val['text'],
-            imageUrl: val['imageUrl'],
-            textOverlay: val['textOverlay']);
-      });
+//      _messagesReference.onChildAdded.listen((Event event) {
+//        var val = event.snapshot.value;
+//        _addMessage(
+//            name: val['sender']['name'],
+//            senderImageUrl: val['sender']['imageUrl'],
+//            text: val['text'],
+//            imageUrl: val['imageUrl'],
+//            textOverlay: val['textOverlay']);
+//      });
     });
   }
 
@@ -285,7 +419,6 @@ class ChatMessageListItem extends StatelessWidget {
 
 class ChatMessageContent extends StatelessWidget {
   ChatMessageContent(this.message);
-
   final ChatMessage message;
 
   Widget build(BuildContext context) {
