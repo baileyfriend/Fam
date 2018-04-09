@@ -428,27 +428,33 @@ class RulesPage extends StatefulWidget{
 class _RulesPageState extends State<RulesPage>{
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
+
     return new Scaffold(
         appBar: new AppBar(
           title: new Text("Rules"),
         ),
-        body: new StreamBuilder<QuerySnapshot>(
-            stream: Firestore.instance.collection("discipline").snapshots,
+//        body: new StreamBuilder<QuerySnapshot>(
+//            stream: Firestore.instance.collection("discipline").snapshots,
+//
+//            builder: (context, snapshot) {
+//              if (!snapshot.hasData) return new Text("Loading...");
+//              return new ListView(
+//                children: snapshot.data.documents.map((document){
+//                  return new ListTile(
+//                    title: new Text("Rule: "),
+//                    subtitle: new Text(document['rule']),
+//                  );
+//                }).toList(),
+//
+//              );
+//            }
+//        ),
+      floatingActionButton: new FloatingActionButton(
+        tooltip: 'Add', // used by assistive technologies
+        child: new Icon(Icons.add),
+        onPressed: null,
+      ),
 
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return new Text("Loading...");
-              return new ListView(
-                children: snapshot.data.documents.map((document){
-                  return new ListTile(
-                    title: new Text("Rule: "),
-                    subtitle: new Text(document['rule']),
-                  );
-                }).toList(),
-
-              );
-            }
-        )
 
     );
   }

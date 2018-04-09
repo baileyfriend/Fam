@@ -413,14 +413,39 @@ class _QuestionsPageState extends State<QuestionsPage>{
 
               );
             }
-        )
+        ),
+      floatingActionButton: new FloatingActionButton(
+        backgroundColor: Colors.deepPurple,
+        tooltip: 'Add', // used by assistive technologies
+        child: new Icon(Icons.add),
+        onPressed: null,
+      ),
     );
   }
 }
 
 class RulesPage extends StatefulWidget{
 
+  GoogleSignInAccount _currentUser;
+
   @override
+  @protected
+  @mustCallSuper
+
+  /*void initState(){
+    super.initState();
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
+      setState((){
+        _currentUser = account;
+        print('GOT THE FUCKING EMAIL: ' + _currentUser.email);
+      });
+    });
+    _googleSignIn.signInSilently()
+        .then((account) {
+      _currentUser = account;
+      print('the current user is: ' + _currentUser.toString());
+    });
+  }*/
   _RulesPageState createState() => new _RulesPageState();
 
 
@@ -428,6 +453,7 @@ class RulesPage extends StatefulWidget{
 class _RulesPageState extends State<RulesPage>{
   @override
   Widget build(BuildContext context) {
+    final TextEditingController _ruleController = new TextEditingController();
     // TODO: implement build
     return new Scaffold(
       appBar: new AppBar(
@@ -441,6 +467,7 @@ class _RulesPageState extends State<RulesPage>{
               return new ListView(
                 children: snapshot.data.documents.map((document){
                   return new ListTile(
+                    onLongPress: null,
                     title: new Text("Rule: "),
                     subtitle: new Text(document['rule']),
                   );
@@ -448,10 +475,43 @@ class _RulesPageState extends State<RulesPage>{
 
               );
             }
-        )
+        ),
+          floatingActionButton: new FloatingActionButton(
+          backgroundColor: Colors.deepPurple,
+          tooltip: 'Add', // used by assistive technologies
+          child: new Icon(Icons.add),
+          onPressed: () async{
+            new TextField(
+              controller: _ruleController,
+              decoration: new InputDecoration(
+                hintText: "Enter new rule"
+              )
+            );
+        try {
+              var data=
+            {
+            'rules':[
+              //_ruleController.text
+              'Testing...'
+            ]
 
+            };
+          print ("Trying...");
+          Firestore.instance.collection('Family').document('freund.bailey@gmail.com').updateData(data);
+        } catch ( e ) {
+              print("Failed");
+        print(e);
+        }
+
+
+          }
+          )
     );
   }
+
+      //);
+    //)
+  //}
 }
 
 class PicturesPage extends StatefulWidget{
@@ -465,6 +525,12 @@ class _PicturesPageState extends State<PicturesPage>{
     return new Scaffold(
       appBar: new AppBar(
         title: new Text("Pictures"),
+      ),
+    floatingActionButton: new FloatingActionButton(
+      backgroundColor: Colors.deepPurple,
+      tooltip: 'Add', // used by assistive technologies
+      child: new Icon(Icons.add),
+      onPressed: null,
       ),
     );
   }
