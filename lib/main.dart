@@ -59,7 +59,22 @@ class Session {
     print('The head of household email was set to ' + this.headOfHouseholdEmail);
   }
 
-  String getHeadOfHouseholdEmail(){
+  Future<String> getHeadOfHouseholdEmailFromFirestore() async {
+    DocumentSnapshot snapshot =
+    await Firestore.instance.collection('Users')
+        .document('user ' + me.uid)
+        .get();
+    var headOfHouseholdEmail = snapshot['headOfHouseholdEmail'];
+    if (headOfHouseholdEmail is String) {
+      print('The head of household email is : ' + headOfHouseholdEmail);
+      this.headOfHouseholdEmail = headOfHouseholdEmail;
+      return headOfHouseholdEmail;
+    } else {
+      return '';
+    }
+  }
+
+  String getHeadOfHouseholdEmail() {
     return this.headOfHouseholdEmail;
   }
   
@@ -197,9 +212,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<Null> _switchLoggedInPage() async{
+    String headOfHouseholdEmail = await session.getHeadOfHouseholdEmailFromFirestore();
     if(_currentUser != null){
-      if(session.getHeadOfHouseholdEmail() == null){ // if session doesn't have a head of household email yet
-        String headOfHouseholdEmail = await getHeadOfHousehold();
+      if(headOfHouseholdEmail == ''){ // if session doesn't have a head of household email yet
         session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
         if (headOfHouseholdEmail == '') {
           Navigator.of(context).pushNamed("/FamilyPage");
