@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:kyn/platform_adaptive.dart';
+import 'package:kyn/main.dart';
 
 // Message list for FireStore
 class MessageList extends StatelessWidget {
@@ -30,9 +31,11 @@ class MessageList extends StatelessWidget {
           new ListView(
             children: snapshot.data.documents.map((DocumentSnapshot document) {
               return new ListTile(
+                  isThreeLine: true,
                   leading: new CircleAvatar(backgroundImage: new NetworkImage(document['userImgUrl'])),
-                  title: new Text(document['sender']),
-                  subtitle: new Text(document['text']),
+                  title: new Text(document['sender'],style: new TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle:
+                      document['text'] != ''? new Text(document['text'], style: new TextStyle(fontSize: 16.0)): new Image.network(document['imageUrl'], width: 300.0,),
                   onTap: () {
                     print("Tapped\n");
                   }
@@ -81,40 +84,42 @@ class HubPage extends StatefulWidget{
 
 class HubPageState extends State<HubPage> with TickerProviderStateMixin{
   CollectionReference get Messages => Firestore.instance.collection('Messages');
+//  DocumentReference messageDocRef = Firestore.instance.collection('Family/' + session.getHeadOfHouseholdEmail() + '/Messages').document();
+  DocumentReference messageDocRef = Firestore.instance.collection('Messages').document();
   TextEditingController _textController = new TextEditingController();
   bool _isComposing = false;
   GoogleSignIn _googleSignIn = new GoogleSignIn();
 
-  Future<Null> _addMessage() async{
-    var account = await _googleSignIn.signIn();
-    Firestore.instance
-      .collection('Messages')
-      .document()
-      .setData(<String, String>{
-      'title': 'title stuff',
-      'text': 'Demo text for message',
-      'sender': account.displayName,
-    });
-  }
+//  Future<Null> _addMessage() async{
+//    var account = await _googleSignIn.signIn();
+//
+//    messageDocRef.setData(<String, String>{
+//      'title': 'title stuff',
+//      'text': 'Demo text for message',
+//      'sender': account.displayName,
+//    });
+//  }
 
   Future<Null> _handlePhotoButtonPressed() async {
-//    var account = await _googleSignIn.signIn();
-//    var imageFile = await ImagePicker.pickImage();
-//    var random = new Random().nextInt(10000);
-//    var ref = FirebaseStorage.instance.ref().child('image_$random.jpg');
-//    var uploadTask = ref.put(imageFile);
-//    var textOverlay = "";
-////    await Navigator.push(context, new TypeMemeRoute(imageFile));
-//    if (textOverlay == null) return;
-//    var downloadUrl = (await uploadTask.future).downloadUrl;
-//    var message = {
-//      'sender': {'name': account.displayName, 'imageUrl': account.photoUrl},
-//      'imageUrl': downloadUrl.toString(),
-//      'textOverlay': textOverlay,
-//    };
-//    _messagesReference.push().set(message);
+    var imageFile = await ImagePicker.pickImage();
+    var random = new Random().nextInt(10000);
+    var ref = FirebaseStorage.instance.ref().child('image_$random.jpg');
+    var uploadTask = ref.put(imageFile);
+    var downloadUrl = (await uploadTask.future).downloadUrl;
+
+    _textController.clear();
+    _googleSignIn.signInSilently().then((user) {
+      Firestore.instance.collection('Messages').document().setData(<String, String>{
+        'text': '',
+        'sender': user.displayName,
+        'userImgUrl': user.photoUrl,
+        'imageUrl': downloadUrl.toString()
+      });
+    });
+
     print("Photo Button Pressed\n");
   }
+
 
   void _handleMessageChanged(String text) {
     setState(() {
@@ -124,16 +129,17 @@ class HubPageState extends State<HubPage> with TickerProviderStateMixin{
 
   void _handleSubmitted(String text) {
     _textController.clear();
-    _googleSignIn.signIn().then((user) {
-      Firestore.instance
-          .collection('Messages')
-          .document()
-          .setData(<String, String>{
-        'text': text,
-        'sender': user.displayName,
-        'userImgUrl': user.photoUrl,
+    if(text != '') {
+      _googleSignIn.signInSilently().then((user) {
+        Firestore.instance.collection('Messages').document().setData(
+            <String, String>{
+              'text': text,
+              'sender': user.displayName,
+              'userImgUrl': user.photoUrl,
+              'imageUrl': ''
+            });
       });
-    });
+    }
   }
 
   Widget _buildTextComposer() {
@@ -174,7 +180,7 @@ class HubPageState extends State<HubPage> with TickerProviderStateMixin{
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: const Text('Firestore Demo2'),
+        title: const Text('The Hub'),
       ),
       body:
         new Column( children: [
