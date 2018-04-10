@@ -64,7 +64,7 @@ class Session {
   Future<String> getHeadOfHouseholdEmailFromFirestore() async {
     DocumentSnapshot snapshot =
     await Firestore.instance.collection('Users')
-        .document('user ' + me.uid)
+        .document(me.uid)
         .get();
     var headOfHouseholdEmail = snapshot['headOfHouseholdEmail'];
     if (headOfHouseholdEmail is String) {
@@ -193,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
       me.setEmail(user.email);
       me.setDisplayName(user.displayName);
       print(me.toString());
-      Firestore.instance.collection('Users').document('user '+user.uid).setData(userData);
+      Firestore.instance.collection('Users').document(user.uid).setData(userData);
 
       print('put data into cloud firestore');
 
@@ -240,10 +240,9 @@ class _MyHomePageState extends State<MyHomePage> {
 //  }
 
   Future<Null> _switchLoggedInPage() async{
-    String headOfHouseholdEmail = await session.getHeadOfHouseholdEmailFromFirestore();
+    session.getHeadOfHouseholdEmailFromFirestore();
     if(_currentUser != null){
-      if(headOfHouseholdEmail == ''){ // if session doesn't have a head of household email yet
-        session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
+      if(session.headOfHouseholdEmail == ''){ // if session doesn't have a head of household email yet
         if (headOfHouseholdEmail == '') {
           Navigator.of(context).pushNamed("/FamilyPage");
         } else {
@@ -258,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<String> getHeadOfHousehold() async {
     DocumentSnapshot snapshot =
     await Firestore.instance.collection('Users')
-        .document('user ' + me.uid)
+        .document(me.uid)
         .get();
     var headOfHouseholdEmail = snapshot['headOfHouseholdEmail'];
     if (headOfHouseholdEmail is String) {
@@ -676,14 +675,14 @@ class _FamilyPageState extends State<FamilyPage> {
                                   headOfHouseholdEmail.toLowerCase())
                                   .updateData(data)
                                   .then((val){
-                                    session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
-                                    // Set head of household
-                                    var userData = {
-                                      'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
-                                    };
-                                    Firestore.instance.collection('Users').document('user '+ me.uid).updateData(userData);
+                                session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
+                                // Set head of household
+                                var userData = {
+                                  'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
+                                };
+                                Firestore.instance.collection('Users').document(me.uid).updateData(userData);
 
-                                  });
+                              });
                             } catch ( e ) {
                               print(e);
                             }
@@ -782,12 +781,12 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
                               .collection('Family')
                               .document(_currentUser.email)
                               .setData(familyData)
-                          .then((val){
+                              .then((val){
                             session.setHeadOfHouseholdEmail(_currentUser.email);
                             var userData = {
                               'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
                             };
-                            Firestore.instance.collection('Users').document('user '+ me.uid).updateData(userData);
+                            Firestore.instance.collection('Users').document(me.uid).updateData(userData);
                           });
                         },
                         child: const Text('Submit')
