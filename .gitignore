@@ -10,3 +10,4 @@ pubspec.lock
 .flutter-plugins
 android/local.properties
 *.lock
+*.bin

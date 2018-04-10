@@ -21,23 +21,24 @@ class User {
   String displayName;
 
 
-  User(){//String uid, String email, String displayName) {
+  User() {
+    //String uid, String email, String displayName) {
 //    this.uid = uid;
 //    this.email = email;
 //    this.displayName = displayName;
   }
 
-  void setUid(String uid){
+  void setUid(String uid) {
     this.uid = uid;
     print('Set uid to $uid \n\n\n');
   }
 
-  void setEmail(String email){
+  void setEmail(String email) {
     this.email = email;
     print('Set email to $email \n\n\n');
   }
 
-  void setDisplayName(String displayName){
+  void setDisplayName(String displayName) {
     this.displayName = displayName;
     print('Set displayName to $displayName \n\n\n');
   }
@@ -50,19 +51,20 @@ class Session {
 
   String headOfHouseholdEmail;
 
-  Session(){
+  Session() {
     headOfHouseholdEmail = '';
   }
 
-  void setHeadOfHouseholdEmail(String email){
+  void setHeadOfHouseholdEmail(String email) {
     this.headOfHouseholdEmail = email;
-    print('The head of household email was set to ' + this.headOfHouseholdEmail);
+    print(
+        'The head of household email was set to ' + this.headOfHouseholdEmail);
   }
 
-  String getHeadOfHouseholdEmail(){
+  String getHeadOfHouseholdEmail() {
     return this.headOfHouseholdEmail;
   }
-  
+
 }
 
 User me = new User();
@@ -88,9 +90,6 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
 
-
-
-
 // Main
 void main() => runApp(new MyApp());
 
@@ -99,7 +98,6 @@ void main() => runApp(new MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
     return new MaterialApp(
         title: 'Kyn',
         theme: defaultTargetPlatform == TargetPlatform.iOS
@@ -116,18 +114,19 @@ class MyApp extends StatelessWidget {
           "/FamilyPage": (BuildContext context) => new FamilyPage(),
           "/ResourcesPage": (BuildContext context) => new ResourcesPage(),
           "/HubPage": (BuildContext context) => new HubPage(),
-          "/Family/HeadOfHouseholdPage": (BuildContext context) => new HeadOfHouseholdPage(),
+          "/Family/HeadOfHouseholdPage": (
+              BuildContext context) => new HeadOfHouseholdPage(),
         }
     );
   }
 }
 
 
-
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
   final String title;
+
   @override
   _MyHomePageState createState() => new _MyHomePageState();
 }
@@ -136,10 +135,10 @@ class _MyHomePageState extends State<MyHomePage> {
   GoogleSignInAccount _currentUser;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
-      setState((){
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+      setState(() {
         _currentUser = account;
       });
     });
@@ -147,9 +146,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<Null> _handleSignIn() async {
-    try{
+    try {
       final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser
+          .authentication;
       final FirebaseUser user = await _auth.signInWithGoogle(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -175,30 +175,31 @@ class _MyHomePageState extends State<MyHomePage> {
       me.setEmail(user.email);
       me.setDisplayName(user.displayName);
       print(me.toString());
-      Firestore.instance.collection('Users').document('user '+user.uid).setData(userData);
-
+      Firestore.instance.collection('Users')
+          .document('user ' + user.uid)
+          .setData(userData);
 
 
       print('put data into cloud firestore');
-
-    } catch(error){
+    } catch (error) {
       print(error.toString());
     }
   }
 
   // Google & Firebase Sign-out
   Future<Null> _handleSignOut() async {
-    try{
+    try {
       FirebaseAuth.instance.signOut();
       _googleSignIn.disconnect();
-    }catch(error){
+    } catch (error) {
       print(error);
     }
   }
 
-  Future<Null> _switchLoggedInPage() async{
-    if(_currentUser != null){
-      if(session.getHeadOfHouseholdEmail() == null){ // if session doesn't have a head of household email yet
+  Future<Null> _switchLoggedInPage() async {
+    if (_currentUser != null) {
+      if (session.getHeadOfHouseholdEmail() ==
+          null) { // if session doesn't have a head of household email yet
         String headOfHouseholdEmail = await getHeadOfHousehold();
         session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
         if (headOfHouseholdEmail == '') {
@@ -226,8 +227,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Widget _buildBody(){
-    if(_currentUser != null){
+  Widget _buildBody() {
+    if (_currentUser != null) {
       return new Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -237,14 +238,21 @@ class _MyHomePageState extends State<MyHomePage> {
             new Text(
                 'Kyn.',
 //                style: Theme.of(context).textTheme.display1,
-                style: new TextStyle(fontFamily: "Source Serif Pro", fontSize: 100.0, fontWeight: FontWeight.bold, color: Colors.white)
+                style: new TextStyle(fontFamily: "Source Serif Pro",
+                    fontSize: 100.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)
             ),
           ),
           new Container(
             color: Colors.deepPurple,
             child: new Column(
               children: <Widget>[
-                new Text("Welcome, " + _currentUser.displayName, style: new TextStyle(fontFamily: "Source Serif Pro", fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.white)),
+                new Text("Welcome, " + _currentUser.displayName,
+                    style: new TextStyle(fontFamily: "Source Serif Pro",
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
 //                new ListTile(
 //                  leading: new GoogleUserCircleAvatar(
 //                    identity: _currentUser,
@@ -252,10 +260,14 @@ class _MyHomePageState extends State<MyHomePage> {
 //                  title: new Text("Welcome, " +_currentUser.displayName),
 //                  subtitle: new Text(_currentUser.email),
 //                ),
-                new IconButton(icon: new Icon(Icons.vpn_key, color: Colors.white), iconSize: 40.0 , onPressed: _switchLoggedInPage),
+                new IconButton(
+                    icon: new Icon(Icons.vpn_key, color: Colors.white),
+                    iconSize: 40.0,
+                    onPressed: _switchLoggedInPage),
 
                 new FlatButton(
-                  child: new Text('Not you? Sign out.', style: new TextStyle(color: Colors.white, fontSize: 12.0) ),
+                  child: new Text('Not you? Sign out.', style: new TextStyle(
+                      color: Colors.white, fontSize: 12.0)),
                   onPressed: _handleSignOut,
                 ),
               ],
@@ -263,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       );
-    }else{
+    } else {
       return new Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -273,7 +285,10 @@ class _MyHomePageState extends State<MyHomePage> {
             new Text(
                 'Kyn.',
 //                style: Theme.of(context).textTheme.display1,
-                style: new TextStyle(fontFamily: "Source Serif Pro", fontSize: 100.0, fontWeight: FontWeight.bold, color: Colors.white)
+                style: new TextStyle(fontFamily: "Source Serif Pro",
+                    fontSize: 100.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)
             ),
           ),
           new Container(
@@ -304,10 +319,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class LoggedInPage extends StatefulWidget{
+class LoggedInPage extends StatefulWidget {
   @override
   _LoggedInPageState createState() => new _LoggedInPageState();
 }
+
 class _LoggedInPageState extends State<LoggedInPage> {
   GoogleSignInAccount _currentUser;
 
@@ -320,38 +336,44 @@ class _LoggedInPageState extends State<LoggedInPage> {
     _googleSignIn.signInSilently();
   }
 
-  Future<Null> _switchCalendarPage() async{
-    if(_currentUser != null){
+  Future<Null> _switchCalendarPage() async {
+    if (_currentUser != null) {
       Navigator.of(context).pushNamed("/CalendarPage");
     }
   }
-  Future<Null> _switchQuestionsPage() async{
-    if(_currentUser != null){
+
+  Future<Null> _switchQuestionsPage() async {
+    if (_currentUser != null) {
       Navigator.of(context).pushNamed("/QuestionsPage");
     }
   }
-  Future<Null> _switchRulesPage() async{
-    if(_currentUser != null){
+
+  Future<Null> _switchRulesPage() async {
+    if (_currentUser != null) {
       Navigator.of(context).pushNamed("/RulesPage");
     }
   }
-  Future<Null> _switchPicturesPage() async{
-    if(_currentUser != null){
+
+  Future<Null> _switchPicturesPage() async {
+    if (_currentUser != null) {
       Navigator.of(context).pushNamed("/PicturesPage");
     }
   }
-  Future<Null> _switchResourcesPage() async{
-    if(_currentUser != null){
+
+  Future<Null> _switchResourcesPage() async {
+    if (_currentUser != null) {
       Navigator.of(context).pushNamed("/ResourcesPage");
     }
   }
-  Future<Null> _switchFamilyPage() async{
-    if(_currentUser != null){
+
+  Future<Null> _switchFamilyPage() async {
+    if (_currentUser != null) {
       Navigator.of(context).pushNamed("/FamilyPage");
     }
   }
-  Future<Null> _switchHubPage() async{
-    if(_currentUser != null){
+
+  Future<Null> _switchHubPage() async {
+    if (_currentUser != null) {
       Navigator.of(context).pushNamed("/HubPage");
     }
   }
@@ -360,7 +382,8 @@ class _LoggedInPageState extends State<LoggedInPage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text("Hi, " + _currentUser.displayName + "!"), backgroundColor: Colors.deepPurple,),
+        title: new Text("Hi, " + _currentUser.displayName + "!"),
+        backgroundColor: Colors.deepPurple,),
       body: new Container(
           color: Colors.white,
           child: new Column(
@@ -472,11 +495,12 @@ class _LoggedInPageState extends State<LoggedInPage> {
   }
 }
 
-class CalendarPage extends StatefulWidget{
+class CalendarPage extends StatefulWidget {
   @override
   _CalendarPageState createState() => new _CalendarPageState();
 }
-class _CalendarPageState extends State<CalendarPage>{
+
+class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -488,11 +512,12 @@ class _CalendarPageState extends State<CalendarPage>{
   }
 }
 
-class QuestionsPage extends StatefulWidget{
+class QuestionsPage extends StatefulWidget {
   @override
   _QuestionsPageState createState() => new _QuestionsPageState();
 }
-class _QuestionsPageState extends State<QuestionsPage>{
+
+class _QuestionsPageState extends State<QuestionsPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -504,28 +529,139 @@ class _QuestionsPageState extends State<QuestionsPage>{
   }
 }
 
-class RulesPage extends StatefulWidget{
-  @override
+
+class RulesPage extends StatefulWidget {
+
   _RulesPageState createState() => new _RulesPageState();
 
+
 }
-class _RulesPageState extends State<RulesPage>{
+
+class _RulesPageState extends State<RulesPage> {
+
+  GoogleSignInAccount _currentUser;
+
+  @override
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+      setState(() {
+        _currentUser = account;
+        print('GOT THE EMAIL: ' + _currentUser.email);
+      });
+    });
+    _googleSignIn.signInSilently()
+        .then((account) {
+      _currentUser = account;
+      print('the current user is: ' + _currentUser.toString());
+    });
+  }
+
+  Future<List> getRules() async {
+    DocumentSnapshot snapshot =
+    await Firestore.instance
+        .collection('Family')
+        .document(session.getHeadOfHouseholdEmail())
+        .get();
+    var rules = snapshot['rules'];
+    if (rules is List) {
+      print('The rules are : ' + rules.toString());
+      return rules;
+    } else {
+      throw 'didnt work';
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
+    final TextEditingController _ruleController = new TextEditingController();
     // TODO: implement build
     return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Rules"),
-      ),
+        appBar: new AppBar(
+          title: new Text("Rules"),
+        ),
+        body: new StreamBuilder<QuerySnapshot>(
+          //stream: //Firestore.instance.collection('Family').document('freund.bailey@gmail.com').snapshots;
+
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return new Text("Loading...");
+              return new ListView(
+                children: snapshot.data.documents.map((document) {
+                  return new ListTile(
+                    onLongPress: null,
+                    title: new Text("Rule: "),
+                    subtitle: new Text(document['rule']),
+                  );
+                }).toList(),
+
+              );
+            }
+        ),
+        floatingActionButton: new FloatingActionButton(
+            backgroundColor: Colors.deepPurple,
+            tooltip: 'Add', // used by assistive technologies
+            child: new Icon(Icons.add),
+            onPressed: () async {
+                await showDialog<Null>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return new SimpleDialog(
+                        title: const Text('Add a new Rule'),
+                        children: <Widget>[
+                          new TextField(
+                              controller: _ruleController,
+                              decoration: new InputDecoration(
+                                  hintText: "Enter new rule"
+                              )
+                          ),
+                          new IconButton(icon: new Icon(
+                              Icons.done, color: Colors.deepPurple),
+                              iconSize: 60.0,
+                              onPressed: () async {
+                                try {
+
+                                  print("Trying...");
+
+                                  var rules = await getRules();
+                                  rules.add(_ruleController.text);
+
+                                  var data =
+                                  {
+                                    'rules': rules
+                                  };
+
+                                  Firestore.instance.collection('Family')
+                                      .document(session.getHeadOfHouseholdEmail())
+                                      .updateData(data);
+                                } catch (e) {
+                                  print("Failed");
+                                  print(e);
+                                }
+                                Navigator.pop(context);
+                              }
+                          ),
+
+                        ],
+                      );
+                    }
+
+                );
+
+            }
+        )
     );
   }
 }
 
-class PicturesPage extends StatefulWidget{
+class PicturesPage extends StatefulWidget {
   @override
   _PicturesPageState createState() => new _PicturesPageState();
 }
-class _PicturesPageState extends State<PicturesPage>{
+
+class _PicturesPageState extends State<PicturesPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -537,10 +673,11 @@ class _PicturesPageState extends State<PicturesPage>{
   }
 }
 
-class FamilyPage extends StatefulWidget{
+class FamilyPage extends StatefulWidget {
   @override
   _FamilyPageState createState() => new _FamilyPageState();
 }
+
 class _FamilyPageState extends State<FamilyPage> {
 
   GoogleSignInAccount _currentUser;
@@ -548,10 +685,10 @@ class _FamilyPageState extends State<FamilyPage> {
   @override
   @protected
   @mustCallSuper
-  void initState(){
+  void initState() {
     super.initState();
-    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
-      setState((){
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+      setState(() {
         _currentUser = account;
         print('GOT THE EMAIL: ' + _currentUser.email);
       });
@@ -564,8 +701,8 @@ class _FamilyPageState extends State<FamilyPage> {
   }
 
 
-  Future<Null> _switchHeadOfHouseholdPage() async{
-    if(_currentUser != null){
+  Future<Null> _switchHeadOfHouseholdPage() async {
+    if (_currentUser != null) {
       Navigator.of(context).pushNamed("/Family/HeadOfHouseholdPage");
     }
   }
@@ -587,7 +724,6 @@ class _FamilyPageState extends State<FamilyPage> {
 
   @override
   Widget build(BuildContext context) {
-
     final TextEditingController _emailController = new TextEditingController();
     final TextEditingController _passwordController = new TextEditingController();
     // TODO: implement build
@@ -617,7 +753,8 @@ class _FamilyPageState extends State<FamilyPage> {
                         onPressed: () async {
                           var pw = await getPassword(_emailController.text);
                           print(pw);
-                          var bytes = UTF8.encode(_passwordController.text); // data being hashed
+                          var bytes = UTF8.encode(
+                              _passwordController.text); // data being hashed
                           var pwGuessHash = sha256.convert(bytes).toString();
 
                           if (pw == pwGuessHash) { // @TODO hash the pw
@@ -634,16 +771,18 @@ class _FamilyPageState extends State<FamilyPage> {
                               Firestore.instance.collection('Family').document(
                                   headOfHouseholdEmail.toLowerCase())
                                   .updateData(data)
-                                  .then((val){
-                                    session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
-                                    // Set head of household
-                                    var userData = {
-                                      'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
-                                    };
-                                    Firestore.instance.collection('Users').document('user '+ me.uid).updateData(userData);
-
-                                  });
-                            } catch ( e ) {
+                                  .then((val) {
+                                session.setHeadOfHouseholdEmail(
+                                    headOfHouseholdEmail);
+                                // Set head of household
+                                var userData = {
+                                  'headOfHouseholdEmail': session
+                                      .getHeadOfHouseholdEmail()
+                                };
+                                Firestore.instance.collection('Users').document(
+                                    'user ' + me.uid).updateData(userData);
+                              });
+                            } catch (e) {
                               print(e);
                             }
                           }
@@ -665,20 +804,21 @@ class _FamilyPageState extends State<FamilyPage> {
 }
 
 
-class HeadOfHouseholdPage extends StatefulWidget{
+class HeadOfHouseholdPage extends StatefulWidget {
   _HeadOfHouseholdPageState createState() => new _HeadOfHouseholdPageState();
 }
 
-class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
+class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
   final TextEditingController _passwordController = new TextEditingController();
   GoogleSignInAccount _currentUser;
+
   @override
   @protected
   @mustCallSuper
-  void initState(){
+  void initState() {
     super.initState();
-    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
-      setState((){
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+      setState(() {
         _currentUser = account;
       });
     });
@@ -710,9 +850,11 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
                     ),
                     new FlatButton(
                         onPressed: () async {
-                          var bytes = UTF8.encode(_passwordController.text); // data being hashed
+                          var bytes = UTF8.encode(
+                              _passwordController.text); // data being hashed
                           var digest = sha256.convert(bytes);
-                          print('the pw is ' + _passwordController.text + ' the hash is ' + digest.toString());
+                          print('the pw is ' + _passwordController.text +
+                              ' the hash is ' + digest.toString());
                           var familyData = {
                             'password': digest.toString(),
                             'familyMembers': {
@@ -741,12 +883,14 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
                               .collection('Family')
                               .document(_currentUser.email)
                               .setData(familyData)
-                          .then((val){
+                              .then((val) {
                             session.setHeadOfHouseholdEmail(_currentUser.email);
                             var userData = {
-                              'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
+                              'headOfHouseholdEmail': session
+                                  .getHeadOfHouseholdEmail()
                             };
-                            Firestore.instance.collection('Users').document('user '+ me.uid).updateData(userData);
+                            Firestore.instance.collection('Users').document(
+                                'user ' + me.uid).updateData(userData);
                           });
                         },
                         child: const Text('Submit')
@@ -760,11 +904,12 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
   }
 }
 
-class ResourcesPage extends StatefulWidget{
+class ResourcesPage extends StatefulWidget {
   @override
   _ResourcesPageState createState() => new _ResourcesPageState();
 }
-class _ResourcesPageState extends State<ResourcesPage>{
+
+class _ResourcesPageState extends State<ResourcesPage> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
