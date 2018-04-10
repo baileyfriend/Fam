@@ -481,11 +481,13 @@ class _RulesPageState extends State<RulesPage>{
             tooltip: 'Add', // used by assistive technologies
             child: new Icon(Icons.add),
             onPressed: () async{
-              new TextField(
-                  controller: _ruleController,
-                  decoration: new InputDecoration(
-                      hintText: "Enter new rule"
-                  )
+              new Flexible(
+                child: new TextField(
+                    controller: _ruleController,
+                    decoration: new InputDecoration(
+                        hintText: "Enter new rule"
+                    )
+              )
               );
               try {
                 var data=

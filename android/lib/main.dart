@@ -39,22 +39,22 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Kyn',
-      theme: defaultTargetPlatform == TargetPlatform.iOS
-          ? kIOSTheme
-          : kDefaultTheme,
-      home: new MyHomePage(title: 'Kyn Home'),
-      routes: <String, WidgetBuilder>{
+        title: 'Kyn',
+        theme: defaultTargetPlatform == TargetPlatform.iOS
+            ? kIOSTheme
+            : kDefaultTheme,
+        home: new MyHomePage(title: 'Kyn Home'),
+        routes: <String, WidgetBuilder>{
 //        "/": (BuildContext context) => new MyHomePage(),
-        "/LoggedInPage": (BuildContext context) => new LoggedInPage(),
-        "/CalendarPage": (BuildContext context) => new CalendarPage(),
-        "/QuestionsPage": (BuildContext context) => new QuestionsPage(),
-        "/RulesPage": (BuildContext context) => new RulesPage(),
-        "/PicturesPage": (BuildContext context) => new PicturesPage(),
-        "/FamilyPage": (BuildContext context) => new FamilyPage(),
-        "/ResourcesPage": (BuildContext context) => new ResourcesPage(),
-        "/HubPage": (BuildContext context) => new HubPage(),
-      }
+          "/LoggedInPage": (BuildContext context) => new LoggedInPage(),
+          "/CalendarPage": (BuildContext context) => new CalendarPage(),
+          "/QuestionsPage": (BuildContext context) => new QuestionsPage(),
+          "/RulesPage": (BuildContext context) => new RulesPage(),
+          "/PicturesPage": (BuildContext context) => new PicturesPage(),
+          "/FamilyPage": (BuildContext context) => new FamilyPage(),
+          "/ResourcesPage": (BuildContext context) => new ResourcesPage(),
+          "/HubPage": (BuildContext context) => new HubPage(),
+        }
     );
   }
 }
@@ -130,11 +130,11 @@ class _MyHomePageState extends State<MyHomePage> {
           new Container(
             color: Colors.deepPurple,
             child:
-              new Text(
+            new Text(
                 'Kyn.',
 //                style: Theme.of(context).textTheme.display1,
-                  style: new TextStyle(fontFamily: "Source Serif Pro", fontSize: 100.0, fontWeight: FontWeight.bold, color: Colors.white)
-              ),
+                style: new TextStyle(fontFamily: "Source Serif Pro", fontSize: 100.0, fontWeight: FontWeight.bold, color: Colors.white)
+            ),
           ),
           new Container(
             color: Colors.deepPurple,
@@ -190,12 +190,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
 
-        body: new Container(
-          color: Colors.deepPurple,
-          child: new Center(
-            child: _buildBody(),
-          ),
+      body: new Container(
+        color: Colors.deepPurple,
+        child: new Center(
+          child: _buildBody(),
         ),
+      ),
     );
   }
 }
@@ -399,21 +399,21 @@ class _QuestionsPageState extends State<QuestionsPage>{
       appBar: new AppBar(
         title: new Text("Questions"),
       ),
-        body: new StreamBuilder<QuerySnapshot>(
-            stream: Firestore.instance.collection("questions").snapshots,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return new Text("Loading...");
-              return new ListView(
-                children: snapshot.data.documents.map((document){
-                  return new ListTile(
+      body: new StreamBuilder<QuerySnapshot>(
+          stream: Firestore.instance.collection("questions").snapshots,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return new Text("Loading...");
+            return new ListView(
+              children: snapshot.data.documents.map((document){
+                return new ListTile(
                     title: new Text(document['q']),
                     subtitle: new Text(document['a'])
-                  );
-                }).toList(),
+                );
+              }).toList(),
 
-              );
-            }
-        ),
+            );
+          }
+      ),
       floatingActionButton: new FloatingActionButton(
         backgroundColor: Colors.deepPurple,
         tooltip: 'Add', // used by assistive technologies
@@ -432,7 +432,7 @@ class RulesPage extends StatefulWidget{
   @protected
   @mustCallSuper
 
-  /*void initState(){
+    void initState(){
     super.initState();
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
       setState((){
@@ -445,22 +445,36 @@ class RulesPage extends StatefulWidget{
       _currentUser = account;
       print('the current user is: ' + _currentUser.toString());
     });
-  }*/
+  }
   _RulesPageState createState() => new _RulesPageState();
 
 
 }
 class _RulesPageState extends State<RulesPage>{
+  Future<String> getRules(String email) async {
+    DocumentSnapshot snapshot =
+    await Firestore.instance
+        .collection('Family')
+        .document(session.getHeadOfHouseholdEmail())
+        .get();
+    var pw = snapshot['password'];
+    if (pw is String) {
+      print('The pw is : ' + pw);
+      return pw;
+    } else {
+      throw 'didnt work';
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final TextEditingController _ruleController = new TextEditingController();
     // TODO: implement build
     return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Rules"),
-      ),
+        appBar: new AppBar(
+          title: new Text("Rules"),
+        ),
         body: new StreamBuilder<QuerySnapshot>(
-            stream: Firestore.instance.collection("discipline").snapshots,
+            stream: //Firestore.instance.collection('Family').document('freund.bailey@gmail.com').snapshots;
 
             builder: (context, snapshot) {
               if (!snapshot.hasData) return new Text("Loading...");
@@ -476,42 +490,70 @@ class _RulesPageState extends State<RulesPage>{
               );
             }
         ),
-          floatingActionButton: new FloatingActionButton(
-          backgroundColor: Colors.deepPurple,
-          tooltip: 'Add', // used by assistive technologies
-          child: new Icon(Icons.add),
-          onPressed: () async{
-            new TextField(
-              controller: _ruleController,
-              decoration: new InputDecoration(
-                hintText: "Enter new rule"
-              )
-            );
-        try {
-              var data=
-            {
-            'rules':[
-              //_ruleController.text
-              'Testing...'
-            ]
+        floatingActionButton: new FloatingActionButton(
+            backgroundColor: Colors.deepPurple,
+            tooltip: 'Add', // used by assistive technologies
+            child: new Icon(Icons.add),
+            onPressed: () async{
+              Future<Null> _popUp() async {
+                switch (await showDialog<Department>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return new SimpleDialog(
+                        title: const Text('Add a new Rule'),
+                        children: <Widget>[
+                          new TextField(
+                            controller: _ruleController,
+                            decoration: new InputDecoration(
+                              hintText: "Enter new rule"
+                            )
+                          ),
+                          new IconButton(icon: new Icon(
+                              Icons.done, color: Colors.deepPurple),
+                              iconSize: 60.0,
+                              onPressed: () async{
 
-            };
-          print ("Trying...");
-          Firestore.instance.collection('Family').document('freund.bailey@gmail.com').updateData(data);
-        } catch ( e ) {
-              print("Failed");
-        print(e);
-        }
+                                try {
+                                  var data=
+                                  {
+                                    'rules':[
+                                      _ruleController.text
+                                      //'Testing...'
+                                    ]
+
+                                  };
+                                  print ("Trying...");
+                                  Firestore.instance.collection('Family').document('freund.bailey@gmail.com').put(data);
+                                  //_switchRulesPage
+                                } catch ( e ) {
+                                  print("Failed");
+                                  //_switchRulesPage
+                                  print(e);
+                                }
+                               // _switchRulesPage
+                                Navigator.pop(context);
+                              }
+                      ),
+
+                        ],
+                      );
+                    }
+                ))
+              }
 
 
-          }
-          )
+              _popUp();
+
+
+
+            }
+        )
     );
   }
 
-      //);
-    //)
-  //}
+//);
+//)
+//}
 }
 
 class PicturesPage extends StatefulWidget{
@@ -526,11 +568,11 @@ class _PicturesPageState extends State<PicturesPage>{
       appBar: new AppBar(
         title: new Text("Pictures"),
       ),
-    floatingActionButton: new FloatingActionButton(
-      backgroundColor: Colors.deepPurple,
-      tooltip: 'Add', // used by assistive technologies
-      child: new Icon(Icons.add),
-      onPressed: null,
+      floatingActionButton: new FloatingActionButton(
+        backgroundColor: Colors.deepPurple,
+        tooltip: 'Add', // used by assistive technologies
+        child: new Icon(Icons.add),
+        onPressed: null,
       ),
     );
   }
@@ -546,24 +588,24 @@ class _FamilyPageState extends State<FamilyPage> {
     // TODO: implement build
 
     return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Family"),
-      ),
-      body: new StreamBuilder<QuerySnapshot>(
-          stream: Firestore.instance.collection("Family").snapshots,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return new Text("Loading...");
-            return new ListView(
-              children: snapshot.data.documents.map((document){
-                return new ListTile(
-                  title: new Text("Your family members are: "),
-                  subtitle: new Text(document['familyMembers']),
-                );
-              }).toList(),
+        appBar: new AppBar(
+          title: new Text("Family"),
+        ),
+        body: new StreamBuilder<QuerySnapshot>(
+            stream: Firestore.instance.collection("Family").snapshots,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return new Text("Loading...");
+              return new ListView(
+                children: snapshot.data.documents.map((document){
+                  return new ListTile(
+                    title: new Text("Your family members are: "),
+                    subtitle: new Text(document['familyMembers']),
+                  );
+                }).toList(),
 
-            );
-          }
-      )
+              );
+            }
+        )
 
     );
   }
