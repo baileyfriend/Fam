@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 import 'package:kyn/widgets.dart';
 import 'package:kyn/hubpage.dart';
@@ -77,7 +79,7 @@ class Session {
   String getHeadOfHouseholdEmail() {
     return this.headOfHouseholdEmail;
   }
-  
+
 }
 
 User me = new User();
@@ -159,6 +161,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     });
     _googleSignIn.signInSilently();
+//    setUserDataOnSilent();
   }
 
   Future<Null> _handleSignIn() async {
@@ -192,8 +195,6 @@ class _MyHomePageState extends State<MyHomePage> {
       print(me.toString());
       Firestore.instance.collection('Users').document('user '+user.uid).setData(userData);
 
-
-
       print('put data into cloud firestore');
 
     } catch(error){
@@ -210,6 +211,33 @@ class _MyHomePageState extends State<MyHomePage> {
       print(error);
     }
   }
+
+//  Future<Null> setUserDataOnSilent() async {
+//    try{
+//      _currentUser = await _googleSignIn.signInSilently();
+//      if(_currentUser != null) {
+//        final GoogleSignInAuthentication googleAuth = await _currentUser
+//            .authentication;
+//        final FirebaseUser user = await _auth.signInWithGoogle(
+//          accessToken: googleAuth.accessToken,
+//          idToken: googleAuth.idToken,
+//        );
+//        theUser = user;
+//        // Assures user information has been obtained
+//
+////      final FirebaseUser currentUser = await _auth.currentUser();
+//
+//        me.setUid(user.uid);
+//        me.setEmail(user.email);
+//        me.setDisplayName(user.displayName);
+//        print(me.toString());
+//
+//        print('Update user on silent');
+//      }
+//    } catch(error){
+//      print(error.toString());
+//    }
+//  }
 
   Future<Null> _switchLoggedInPage() async{
     String headOfHouseholdEmail = await session.getHeadOfHouseholdEmailFromFirestore();
@@ -387,10 +415,10 @@ class _LoggedInPageState extends State<LoggedInPage> {
                   new Column(
                     children: <Widget>[
                       new IconButton(icon: new Icon(
-                          Icons.calendar_today, color: Colors.deepPurple),
+                          Icons.chat_bubble, color: Colors.deepPurple),
                           iconSize: 40.0,
-                          onPressed: _switchCalendarPage),
-                      new Text("Calendar", style: new TextStyle(
+                          onPressed: _switchHubPage),
+                      new Text("The Hub", style: new TextStyle(
                           fontFamily: "Source Serif Pro",
                           fontWeight: FontWeight.bold,
                           color: Colors.deepPurple))
@@ -427,14 +455,11 @@ class _LoggedInPageState extends State<LoggedInPage> {
                   ),
                   new Column(
                     children: <Widget>[
-                      new IconButton(icon: new Icon(
-                          Icons.chat_bubble, color: Colors.deepPurple),
-                          iconSize: 60.0,
-                          onPressed: _switchHubPage),
-                      new Text("The Hub", style: new TextStyle(
-                          fontFamily: "Source Serif Pro",
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple))
+                      new Text(
+                          'Kyn.',
+//                style: Theme.of(context).textTheme.display1,
+                          style: new TextStyle(fontFamily: "Source Serif Pro", fontSize: 60.0, fontWeight: FontWeight.bold, color: Colors.deepPurple)
+                      ),
                     ],
                   ),
                   new Column(
@@ -639,7 +664,8 @@ class _FamilyPageState extends State<FamilyPage> {
                             var data = {
                               'familyMembers':
                               {
-                                'name': _currentUser.displayName
+                                'name': _currentUser.displayName,
+                                'memberID': 'user '+ me.uid
                               }
                             };
 
