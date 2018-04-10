@@ -11,7 +11,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kyn/widgets.dart';
 import 'package:kyn/hubpage.dart';
 import 'package:kyn/platform_adaptive.dart';
-
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 class User {
 
@@ -552,7 +553,7 @@ class _FamilyPageState extends State<FamilyPage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account){
       setState((){
         _currentUser = account;
-        print('GOT THE FUCKING EMAIL: ' + _currentUser.email);
+        print('GOT THE EMAIL: ' + _currentUser.email);
       });
     });
     _googleSignIn.signInSilently()
@@ -570,7 +571,11 @@ class _FamilyPageState extends State<FamilyPage> {
   }
 
   Future<String> getPassword(String email) async {
-    DocumentSnapshot snapshot = await Firestore.instance.collection('Family').document(session.getHeadOfHouseholdEmail()).get();
+    DocumentSnapshot snapshot =
+    await Firestore.instance
+        .collection('Family')
+        .document(session.getHeadOfHouseholdEmail())
+        .get();
     var pw = snapshot['password'];
     if (pw is String) {
       print('The pw is : ' + pw);
@@ -612,8 +617,10 @@ class _FamilyPageState extends State<FamilyPage> {
                         onPressed: () async {
                           var pw = await getPassword(_emailController.text);
                           print(pw);
+                          var bytes = UTF8.encode(_passwordController.text); // data being hashed
+                          var pwGuessHash = sha256.convert(bytes).toString();
 
-                          if (pw == _passwordController.text) { // @TODO hash the pw
+                          if (pw == pwGuessHash) { // @TODO hash the pw
                             var data = {
                               'familyMembers':
                               {
@@ -703,8 +710,11 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
                     ),
                     new FlatButton(
                         onPressed: () async {
+                          var bytes = UTF8.encode(_passwordController.text); // data being hashed
+                          var digest = sha256.convert(bytes);
+                          print('the pw is ' + _passwordController.text + ' the hash is ' + digest.toString());
                           var familyData = {
-                            'password': _passwordController.text,
+                            'password': digest.toString(),
                             'familyMembers': {
                               'name': '',
                               'email': '',
