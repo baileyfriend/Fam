@@ -13,7 +13,8 @@ import 'dart:convert';
 import 'package:kyn/widgets.dart';
 import 'package:kyn/hubpage.dart';
 import 'package:kyn/platform_adaptive.dart';
-
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 class User {
 
@@ -172,6 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
         'displayName': user.displayName
       };
 
+
       me.setUid(user.uid);
       me.setEmail(user.email);
       me.setDisplayName(user.displayName);
@@ -228,8 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if(session.getHeadOfHouseholdEmail() == null){ // if session doesn't have a head of household email yet
         String headOfHouseholdEmail = await getHeadOfHousehold();
         session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
-        print(headOfHouseholdEmail);
-        if (headOfHouseholdEmail == null) {
+        if (headOfHouseholdEmail == '') {
           Navigator.of(context).pushNamed("/FamilyPage");
         } else {
           Navigator.of(context).pushNamed("/LoggedInPage");
@@ -661,14 +662,14 @@ class _FamilyPageState extends State<FamilyPage> {
                                   headOfHouseholdEmail.toLowerCase())
                                   .updateData(data)
                                   .then((val){
-                                session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
-                                // Set head of household
-                                var userData = {
-                                  'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
-                                };
-                                Firestore.instance.collection('Users').document('user '+ me.uid).updateData(userData);
+                                    session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
+                                    // Set head of household
+                                    var userData = {
+                                      'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
+                                    };
+                                    Firestore.instance.collection('Users').document('user '+ me.uid).updateData(userData);
 
-                              });
+                                  });
                             } catch ( e ) {
                               print(e);
                             }
@@ -767,7 +768,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
                               .collection('Family')
                               .document(_currentUser.email)
                               .setData(familyData)
-                              .then((val){
+                          .then((val){
                             session.setHeadOfHouseholdEmail(_currentUser.email);
                             var userData = {
                               'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
@@ -801,3 +802,20 @@ class _ResourcesPageState extends State<ResourcesPage>{
     );
   }
 }
+
+
+//class HubPage extends StatefulWidget{
+//  _HubPageState createState() => new _HubPageState();
+//}
+//
+//class _HubPageState extends State<HubPage>{
+//  @override
+//  Widget build(BuildContext context) {
+//    return new Scaffold(
+//      appBar: new AppBar(
+//        title: new Text("The Hub"),
+//      ),
+//      body: new ChatScreen(),
+//    );
+//  }
+//}
