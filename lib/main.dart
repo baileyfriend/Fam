@@ -66,15 +66,19 @@ class Session {
     await Firestore.instance.collection('Users')
         .document(me.uid)
         .get();
-    var headOfHouseholdEmail = snapshot['headOfHouseholdEmail'];
-    if (headOfHouseholdEmail is String) {
-      print('The head of household email is : ' + headOfHouseholdEmail);
-      this.headOfHouseholdEmail = headOfHouseholdEmail;
-      return headOfHouseholdEmail;
-    } else {
+    try {
+      var headOfHouseholdEmail = snapshot['headOfHouseholdEmail'];
+      if (headOfHouseholdEmail is String) {
+        print('The head of household email is : ' + headOfHouseholdEmail);
+        this.headOfHouseholdEmail = headOfHouseholdEmail;
+        return headOfHouseholdEmail;
+      } else {
+        return '';
+      }
+    } catch(error) {
       return '';
+      }
     }
-  }
 
   String getHeadOfHouseholdEmail() {
     return this.headOfHouseholdEmail;
@@ -652,7 +656,8 @@ class _FamilyPageState extends State<FamilyPage> {
                             hintText: "Enter password set by head of household"
                         )
                     ),
-                    new FlatButton(
+                    new RaisedButton(
+                        color: Colors.green,
                         onPressed: () async {
                           var pw = await getPassword(_emailController.text);
                           print(pw);
@@ -690,8 +695,9 @@ class _FamilyPageState extends State<FamilyPage> {
                         },
                         child: const Text('Submit')
                     ),
-                    new FlatButton(
+                    new RaisedButton(
                       onPressed: _switchHeadOfHouseholdPage,
+                      color: Colors.blue,
                       child: const Text('I am head of household'),
                     ),
                     //new Text(_currentUser.email)
@@ -711,6 +717,7 @@ class HeadOfHouseholdPage extends StatefulWidget{
 
 class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
   final TextEditingController _passwordController = new TextEditingController();
+   final TextEditingController _password2Controller = new TextEditingController();
   GoogleSignInAccount _currentUser;
   @override
   @protected
@@ -731,8 +738,9 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
+    final key = new GlobalKey<ScaffoldState>();
     return new Scaffold(
+      key: key,
         appBar: new AppBar(
 
         ),
@@ -745,49 +753,71 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
                     new TextField(
                         controller: _passwordController,
                         decoration: new InputDecoration(
-                            hintText: "Enter password set by head of household"
+                            hintText: "Set Password"
                         )
                     ),
-                    new FlatButton(
+                    new TextField(
+                        controller: _password2Controller,
+                        decoration: new InputDecoration(
+                            hintText: "Confirm Password"
+                        )
+                    ),
+                    new RaisedButton(
+                      color: Colors.green,
                         onPressed: () async {
-                          var bytes = UTF8.encode(_passwordController.text); // data being hashed
-                          var digest = sha256.convert(bytes);
-                          print('the pw is ' + _passwordController.text + ' the hash is ' + digest.toString());
-                          var familyData = {
-                            'password': digest.toString(),
-                            'familyMembers': {
-                              'name': '',
-                              'email': '',
-                              'rules': []
-                            },
-
-                            'resources': {
-                              'name': '',
-                              'phoneNumber': '',
-                              'address': '',
-                              'email': ''
-                            },
-
-                            'questions': {
-                              'asker': '',
-                              'question': '',
-                              'answer': ''
-                            },
-
-                            'rules': []
-                          };
-
-                          Firestore.instance
-                              .collection('Family')
-                              .document(_currentUser.email)
-                              .setData(familyData)
-                              .then((val){
-                            session.setHeadOfHouseholdEmail(_currentUser.email);
-                            var userData = {
-                              'headOfHouseholdEmail': session.getHeadOfHouseholdEmail()
+                          if(_passwordController.text == _passwordController.text) {
+                            var bytes = UTF8.encode(
+                                _passwordController.text); // data being hashed
+                            var digest = sha256.convert(bytes);
+                            var familyData = {
+                              'password': digest.toString(),
+//                              'familyMembers': {
+//                                'name': '',
+//                                'email': '',
+//                                'rules': []
+//                              },
+//
+//                              'resources': {
+//                                'name': '',
+//                                'phoneNumber': '',
+//                                'address': '',
+//                                'email': ''
+//                              },
+//
+//                              'questions': {
+//                                'asker': '',
+//                                'question': '',
+//                                'answer': ''
+//                              },
+//
+//                              'rules': []
                             };
-                            Firestore.instance.collection('Users').document(me.uid).updateData(userData);
-                          });
+
+                            Firestore.instance
+                                .collection('Family')
+                                .document(_currentUser.email)
+                                .updateData(familyData)
+                                .then((val) {
+                              session.setHeadOfHouseholdEmail(
+                                  _currentUser.email);
+                              var userData = {
+                                'headOfHouseholdEmail': session
+                                    .getHeadOfHouseholdEmail()
+                              };
+                              Firestore.instance.collection('Users').document(
+                                  me.uid).updateData(userData);
+                            })
+                            .then((result){
+                              Scaffold.of(context).showSnackBar(new SnackBar(
+                                content: new Text("Successfully set family password."),
+                              ));
+                            });
+
+                          } else {
+                            Scaffold.of(context).showSnackBar(new SnackBar(
+                              content: new Text("Passwords do not match. Try again."),
+                            ));
+                          }
                         },
                         child: const Text('Submit')
                     )
