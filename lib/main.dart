@@ -517,13 +517,55 @@ class QuestionsPage extends StatefulWidget {
   _QuestionsPageState createState() => new _QuestionsPageState();
 }
 
-class _QuestionsPageState extends State<QuestionsPage> {
+class _QuestionsPageState extends State<QuestionsPage>{
   @override
   Widget build(BuildContext context) {
-// TODO: implement build
+    // TODO: implement build
     return new Scaffold(
       appBar: new AppBar(
         title: new Text("Questions"),
+      ),
+      body: new StreamBuilder<QuerySnapshot>(
+          stream: Firestore.instance.collection("questions").snapshots,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return new Text("Loading...");
+            return new ListView(
+              children: snapshot.data.documents.map((document){
+                return new ListTile(
+                    title: new Text(document['q']),
+                    subtitle: new Text(document['a'])
+                );
+              }).toList(),
+
+            );
+          }
+      ),
+      floatingActionButton: new FloatingActionButton(
+        backgroundColor: Colors.deepPurple,
+        tooltip: 'Add', // used by assistive technologies
+        child: new Icon(Icons.add),
+          onPressed: () async {
+            try {
+              print("Trying...");
+
+              //var rules = await getRules();
+              //rules.add(_ruleController.text);
+
+              var data =
+              {
+               // 'rules': rules
+              };
+              print(data);
+
+              Firestore.instance.collection('Family')
+                  .document(session.getHeadOfHouseholdEmail())
+                  .updateData(data);
+            } catch (e) {
+              print("Failed");
+              print(e);
+            }
+            Navigator.pop(context);
+          }
       ),
     );
   }
@@ -624,13 +666,14 @@ class _RulesPageState extends State<RulesPage> {
                               try {
                                 print("Trying...");
 
-                                var rules = await getRules();
+                                var rules = /*await getRules()*/ [];
                                 rules.add(_ruleController.text);
 
                                 var data =
                                 {
                                   'rules': rules
                                 };
+                                print("email:" +session.getHeadOfHouseholdEmail());
 
                                 Firestore.instance.collection('Family')
                                     .document(session.getHeadOfHouseholdEmail())
@@ -910,10 +953,31 @@ class ResourcesPage extends StatefulWidget {
 class _ResourcesPageState extends State<ResourcesPage> {
   @override
   Widget build(BuildContext context) {
-// TODO: implement build
+    // TODO: implement build
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text("Resources"),
+        title: new Text('Resources'),
+      ),
+      body: new StreamBuilder<QuerySnapshot>(
+          stream: Firestore.instance.collection("resources").snapshots,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return new Text("Loading...");
+            return new ListView(
+              children: snapshot.data.documents.map((document){
+                return new ListTile(
+                    title: new Text(document['name']),
+                    subtitle: new Text(document['phone'])
+                );
+              }).toList(),
+
+            );
+          }
+      ),
+      floatingActionButton: new FloatingActionButton(
+        backgroundColor: Colors.deepPurple,
+        tooltip: 'Add', // used by assistive technologies
+        child: new Icon(Icons.add),
+        onPressed: null,
       ),
     );
   }
