@@ -73,10 +73,10 @@ class Session {
         this.headOfHouseholdEmail = headOfHouseholdEmail;
         return headOfHouseholdEmail;
       } else {
-        return '';
+        return;
       }
     } catch(error) {
-      return '';
+      return;
       }
     }
 
@@ -200,7 +200,6 @@ class _MyHomePageState extends State<MyHomePage> {
       Firestore.instance.collection('Users').document(user.uid).setData(userData);
 
       print('put data into cloud firestore');
-
     } catch(error){
       print(error.toString());
     }
@@ -717,8 +716,10 @@ class HeadOfHouseholdPage extends StatefulWidget{
 
 class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
   final TextEditingController _passwordController = new TextEditingController();
-   final TextEditingController _password2Controller = new TextEditingController();
+  final TextEditingController _password2Controller = new TextEditingController();
   GoogleSignInAccount _currentUser;
+
+
   @override
   @protected
   @mustCallSuper
@@ -738,34 +739,38 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
 
   @override
   Widget build(BuildContext context) {
-    final key = new GlobalKey<ScaffoldState>();
     return new Scaffold(
-      key: key,
         appBar: new AppBar(
-
+          title: new Text("Head of Household"),
         ),
-
         body: new Column(
             children: <Widget>[
               new Card(
                 child: new Column(
                   children: <Widget>[
                     new TextField(
+                        autocorrect: false,
                         controller: _passwordController,
                         decoration: new InputDecoration(
                             hintText: "Set Password"
                         )
                     ),
                     new TextField(
+                        autocorrect: false,
                         controller: _password2Controller,
                         decoration: new InputDecoration(
                             hintText: "Confirm Password"
-                        )
+                        ),
+//                      onSubmitted: ( newValue ) {
+//                          if (_passwordController.text != _password2Controller.text){
+//
+//                          }
+//                      },
                     ),
                     new RaisedButton(
                       color: Colors.green,
                         onPressed: () async {
-                          if(_passwordController.text == _passwordController.text) {
+                          if(_passwordController.text == _password2Controller.text) {
                             var bytes = UTF8.encode(
                                 _passwordController.text); // data being hashed
                             var digest = sha256.convert(bytes);
@@ -796,27 +801,38 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
                             Firestore.instance
                                 .collection('Family')
                                 .document(_currentUser.email)
-                                .updateData(familyData)
+                                .setData(familyData)
                                 .then((val) {
                               session.setHeadOfHouseholdEmail(
                                   _currentUser.email);
+
                               var userData = {
                                 'headOfHouseholdEmail': session
                                     .getHeadOfHouseholdEmail()
                               };
+
                               Firestore.instance.collection('Users').document(
-                                  me.uid).updateData(userData);
+                                  me.uid).setData(userData);
                             })
                             .then((result){
-                              Scaffold.of(context).showSnackBar(new SnackBar(
-                                content: new Text("Successfully set family password."),
-                              ));
+//                              showDialog(
+//                                context: context,
+//                                builder: (_) => new AlertDialog(
+//                                  title: new Text('Successfully set password'),
+//                                ),
+//                              );
+                            print('successfully set stuff');
+                            })
+                            .catchError((error){
+
                             });
 
                           } else {
-                            Scaffold.of(context).showSnackBar(new SnackBar(
-                              content: new Text("Passwords do not match. Try again."),
-                            ));
+////                         showDialog(
+//                            context: context,
+//                            builder: (_) => new AlertDialog(
+//                            title: new Text('Successfully set password'),
+//                            ),
                           }
                         },
                         child: const Text('Submit')
