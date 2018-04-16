@@ -52,8 +52,9 @@ class Session {
 
   String headOfHouseholdEmail;
 
-  Session(){
+  Session() {
     headOfHouseholdEmail = '';
+
   }
 
   void setHeadOfHouseholdEmail(String email){
@@ -73,10 +74,10 @@ class Session {
         this.headOfHouseholdEmail = headOfHouseholdEmail;
         return headOfHouseholdEmail;
       } else {
-        return;
+        return '';
       }
     } catch(error) {
-      return;
+      return '';
       }
     }
 
@@ -613,6 +614,7 @@ class _FamilyPageState extends State<FamilyPage> {
   }
 
   Future<String> getPassword(String email) async {
+    session.getHeadOfHouseholdEmailFromFirestore();
     DocumentSnapshot snapshot =
     await Firestore.instance
         .collection('Family')
@@ -803,8 +805,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage>{
                                 .document(_currentUser.email)
                                 .setData(familyData)
                                 .then((val) {
-                              session.setHeadOfHouseholdEmail(
-                                  _currentUser.email);
+                                  session.setHeadOfHouseholdEmail(_currentUser.email);
 
                               var userData = {
                                 'headOfHouseholdEmail': session
