@@ -50,21 +50,45 @@ class User {
 class Session {
 
   String headOfHouseholdEmail;
+  String currentUid;
 
   Session() {
     headOfHouseholdEmail = '';
+
   }
 
   void setHeadOfHouseholdEmail(String email) {
     this.headOfHouseholdEmail = email;
-    print(
-        'The head of household email was set to ' + this.headOfHouseholdEmail);
+    print('The head of household email was set to ' + this.headOfHouseholdEmail);
   }
 
   String getHeadOfHouseholdEmail() {
     return this.headOfHouseholdEmail;
   }
 
+  Future<String> getHeadOfHouseholdEmailFromFirestore() async {
+    print('getting hoh from firestore.. for user with uid ');
+    print(this.currentUid);
+    DocumentSnapshot snapshot =
+    await Firestore.instance.collection('Users')
+        .document(me.email)
+        .get();
+    try {
+      var headOfHouseholdEmail = snapshot['headOfHouseholdEmail']; // seems like error happens here. Why?
+      if (headOfHouseholdEmail is String) {
+        print('The head of household email is : ' + headOfHouseholdEmail);
+        this.setHeadOfHouseholdEmail(headOfHouseholdEmail);
+        print('success! Got hoh from firebase.');
+        return headOfHouseholdEmail;
+      } else {
+        return '';
+      }
+    } catch(error) {
+      print('got error while trying to get hoh email...');
+      print(error);
+      return '';
+    }
+  }
 }
 
 User me = new User();
@@ -140,6 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
+        session.currentUid = account.id;
       });
     });
     _googleSignIn.signInSilently();
@@ -176,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
       me.setDisplayName(user.displayName);
       print(me.toString());
       Firestore.instance.collection('Users')
-          .document('user ' + user.uid)
+          .document(user.email)
           .setData(userData);
 
 
@@ -216,7 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<String> getHeadOfHousehold() async {
     DocumentSnapshot snapshot =
     await Firestore.instance.collection('Users')
-        .document('user ' + me.uid)
+        .document(me.email)
         .get();
     var headOfHouseholdEmail = snapshot['headOfHouseholdEmail'];
     if (headOfHouseholdEmail is String) {
@@ -518,55 +543,100 @@ class QuestionsPage extends StatefulWidget {
 }
 
 class _QuestionsPageState extends State<QuestionsPage>{
+
+  @override
+  void initState() {
+    super.initState();
+    session.getHeadOfHouseholdEmail(); // make sure to get the head of household email
+    print('the head of household email is ' + session.getHeadOfHouseholdEmail());
+  }
+
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
+    final TextEditingController _questionController = new TextEditingController();
+// TODO: implement build
     return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Questions"),
-      ),
-      body: new StreamBuilder<QuerySnapshot>(
-          stream: Firestore.instance.collection("questions").snapshots,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return new Text("Loading...");
-            return new ListView(
-              children: snapshot.data.documents.map((document){
-                return new ListTile(
-                    title: new Text(document['q']),
-                    subtitle: new Text(document['a'])
-                );
-              }).toList(),
+        appBar: new AppBar(
+          title: new Text("Questions"),
+        ),
+        body: new StreamBuilder<QuerySnapshot>(
+            stream:
+            Firestore.instance.collection('Family')
+                .document(session.getHeadOfHouseholdEmail())
+                .getCollection("Questions").snapshots,
 
-            );
-          }
-      ),
-      floatingActionButton: new FloatingActionButton(
-        backgroundColor: Colors.deepPurple,
-        tooltip: 'Add', // used by assistive technologies
-        child: new Icon(Icons.add),
-          onPressed: () async {
-            try {
-              print("Trying...");
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return new Text("Loading...");
+              return new ListView(
+                children: snapshot.data.documents.map((document) {
+                  return new ListTile(
+                    onLongPress: null,
+                    title: new Text("Question: "),
+                    subtitle: new Text(document['question']),
+                  );
+                }).toList(),
 
-              //var rules = await getRules();
-              //rules.add(_ruleController.text);
-
-              var data =
-              {
-               // 'rules': rules
-              };
-              print(data);
-
-              Firestore.instance.collection('Family')
-                  .document(session.getHeadOfHouseholdEmail())
-                  .updateData(data);
-            } catch (e) {
-              print("Failed");
-              print(e);
+              );
             }
-            Navigator.pop(context);
-          }
-      ),
+        ),
+        floatingActionButton: new FloatingActionButton(
+            backgroundColor: Colors.deepPurple,
+            tooltip: 'Add', // used by assistive technologies
+            child: new Icon(Icons.add),
+            onPressed: () async {
+              await showDialog<Null>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return new SimpleDialog(
+                      title: const Text('Add a new Question'),
+                      children: <Widget>[
+                        new TextField(
+                            controller: _questionController,
+                            decoration: new InputDecoration(
+                                hintText: "Enter new question"
+                            )
+                        ),
+                        new IconButton(icon: new Icon(
+                            Icons.done, color: Colors.deepPurple),
+                            iconSize: 60.0,
+                            onPressed: () async {
+                              try {
+                                print("Trying...");
+                                print('user entered text: ');
+                                print(_questionController.text);
+
+//                                var rules = new List();
+//                                rules.add(await getRules());
+//                                rules.add(_ruleController.text);
+
+                                var data =
+                                {
+                                  'question': _questionController.text
+                                };
+
+                                print("email:" +session.getHeadOfHouseholdEmail());
+
+
+                                Firestore.instance.collection('Family')
+                                    .document(session.getHeadOfHouseholdEmail())
+                                    .getCollection("Questions")
+                                    .document()
+                                    .setData(data);
+                              } catch (e) {
+                                print("Failed");
+                                print(e);
+                              }
+                              Navigator.pop(context);
+                            }
+                        ),
+
+                      ],
+                    );
+                  }
+
+              );
+            }
+        )
     );
   }
 }
@@ -591,21 +661,30 @@ class _RulesPageState extends State<RulesPage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
+        session.currentUid = account.id;
         print('GOT THE EMAIL: ' + _currentUser.email);
       });
     });
     _googleSignIn.signInSilently()
         .then((account) {
       _currentUser = account;
+      session.currentUid = account.id;
       print('the current user is: ' + _currentUser.toString());
     });
+
+    session.getHeadOfHouseholdEmailFromFirestore();
+    print('the head of household email is ' + session.getHeadOfHouseholdEmail());
   }
 
   Future<List> getRules() async {
+    print('getting rules');
+
+    session.getHeadOfHouseholdEmailFromFirestore();
+
     DocumentSnapshot snapshot =
     await Firestore.instance
         .collection('Family')
-        .document('coryj@mail.gvsu.edu')
+        .document(session.getHeadOfHouseholdEmail())
         .get();
     var rules = snapshot['rules'];
     if (rules is List) {
@@ -626,7 +705,7 @@ class _RulesPageState extends State<RulesPage> {
           title: new Text("Rules"),
         ),
         body: new StreamBuilder<QuerySnapshot>(
-//stream: //Firestore.instance.collection('Family').document('freund.bailey@gmail.com').snapshots;
+        stream: Firestore.instance.collection('Family').document('freund.bailey@gmail.com').getCollection("Rules").snapshots,
 
             builder: (context, snapshot) {
               if (!snapshot.hasData) return new Text("Loading...");
@@ -666,20 +745,23 @@ class _RulesPageState extends State<RulesPage> {
                               try {
                                 print("Trying...");
 
-                                var rules = await getRules();
-                                rules.add(_ruleController.text);
+//                                var rules = new List();
+//                                rules.add(await getRules());
+//                                rules.add(_ruleController.text);
 
                                 var data =
                                 {
-                                  'rules': _ruleController.text
+                                  'rule': _ruleController.text
                                 };
-                                //var data="" +_ruleController.text;
+
                                 print("email:" +session.getHeadOfHouseholdEmail());
-                                var em='coryj@mail.gvsu.edu';
+
 
                                 Firestore.instance.collection('Family')
-                                    .document(em)
-                                    .updateData(data);
+                                    .document(session.getHeadOfHouseholdEmail())
+                                    .getCollection("Rules")
+                                    .document()
+                                    .setData(data);
                               } catch (e) {
                                 print("Failed");
                                 print(e);
@@ -733,12 +815,14 @@ class _FamilyPageState extends State<FamilyPage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
+        session.currentUid = account.id;
         print('GOT THE EMAIL: ' + _currentUser.email);
       });
     });
     _googleSignIn.signInSilently()
         .then((account) {
       _currentUser = account;
+      session.currentUid = account.id;
       print('the current user is: ' + _currentUser.toString());
     });
   }
@@ -823,7 +907,7 @@ class _FamilyPageState extends State<FamilyPage> {
                                       .getHeadOfHouseholdEmail()
                                 };
                                 Firestore.instance.collection('Users').document(
-                                    'user ' + me.uid).updateData(userData);
+                                    me.email).setData(userData);
                               });
                             } catch (e) {
                               print(e);
@@ -863,11 +947,13 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
+        session.currentUid = account.id;
       });
     });
     _googleSignIn.signInSilently()
         .then((account) {
       _currentUser = account;
+      session.currentUid = account.id;
       print('the current user is: ' + _currentUser.toString());
     });
   }
@@ -922,6 +1008,8 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
                             'rules': []
                           };
 
+
+
                           Firestore.instance
                               .collection('Family')
                               .document(_currentUser.email)
@@ -933,7 +1021,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
                                   .getHeadOfHouseholdEmail()
                             };
                             Firestore.instance.collection('Users').document(
-                                'user ' + me.uid).updateData(userData);
+                                me.email).updateData(userData);
                           });
                         },
                         child: const Text('Submit')
@@ -961,7 +1049,10 @@ class _ResourcesPageState extends State<ResourcesPage> {
         title: new Text('Resources'),
       ),
       body: new StreamBuilder<QuerySnapshot>(
-          stream: Firestore.instance.collection("resources").snapshots,
+          stream:
+          Firestore.instance.collection("Family")
+              .document(session.getHeadOfHouseholdEmail())
+              .getCollection("resources").snapshots,
           builder: (context, snapshot) {
             if (!snapshot.hasData) return new Text("Loading...");
             return new ListView(
