@@ -605,7 +605,7 @@ class _RulesPageState extends State<RulesPage> {
     DocumentSnapshot snapshot =
     await Firestore.instance
         .collection('Family')
-        .document(session.getHeadOfHouseholdEmail())
+        .document('coryj@mail.gvsu.edu')
         .get();
     var rules = snapshot['rules'];
     if (rules is List) {
@@ -666,17 +666,19 @@ class _RulesPageState extends State<RulesPage> {
                               try {
                                 print("Trying...");
 
-                                var rules = /*await getRules()*/ [];
+                                var rules = await getRules();
                                 rules.add(_ruleController.text);
 
                                 var data =
                                 {
-                                  'rules': rules
+                                  'rules': _ruleController.text
                                 };
+                                //var data="" +_ruleController.text;
                                 print("email:" +session.getHeadOfHouseholdEmail());
+                                var em='coryj@mail.gvsu.edu';
 
                                 Firestore.instance.collection('Family')
-                                    .document(session.getHeadOfHouseholdEmail())
+                                    .document(em)
                                     .updateData(data);
                               } catch (e) {
                                 print("Failed");
