@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 import 'package:kyn/widgets.dart';
 import 'package:kyn/hubpage.dart';
@@ -65,6 +67,7 @@ class Session {
   String getHeadOfHouseholdEmail() {
     return this.headOfHouseholdEmail;
   }
+
 
   Future<String> getHeadOfHouseholdEmailFromFirestore() async {
     print('getting hoh from firestore.. for user with uid ');
@@ -168,6 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     });
     _googleSignIn.signInSilently();
+//    setUserDataOnSilent();
   }
 
   Future<Null> _handleSignIn() async {
@@ -200,6 +204,7 @@ class _MyHomePageState extends State<MyHomePage> {
       me.setEmail(user.email);
       me.setDisplayName(user.displayName);
       print(me.toString());
+
       Firestore.instance.collection('Users')
           .document(user.email)
           .setData(userData);
@@ -220,6 +225,7 @@ class _MyHomePageState extends State<MyHomePage> {
       print(error);
     }
   }
+
 
   Future<Null> _switchLoggedInPage() async {
     if (_currentUser != null) {
@@ -420,10 +426,10 @@ class _LoggedInPageState extends State<LoggedInPage> {
                   new Column(
                     children: <Widget>[
                       new IconButton(icon: new Icon(
-                          Icons.calendar_today, color: Colors.deepPurple),
+                          Icons.chat_bubble, color: Colors.deepPurple),
                           iconSize: 40.0,
-                          onPressed: _switchCalendarPage),
-                      new Text("Calendar", style: new TextStyle(
+                          onPressed: _switchHubPage),
+                      new Text("The Hub", style: new TextStyle(
                           fontFamily: "Source Serif Pro",
                           fontWeight: FontWeight.bold,
                           color: Colors.deepPurple))
@@ -460,14 +466,11 @@ class _LoggedInPageState extends State<LoggedInPage> {
                   ),
                   new Column(
                     children: <Widget>[
-                      new IconButton(icon: new Icon(
-                          Icons.chat_bubble, color: Colors.deepPurple),
-                          iconSize: 60.0,
-                          onPressed: _switchHubPage),
-                      new Text("The Hub", style: new TextStyle(
-                          fontFamily: "Source Serif Pro",
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple))
+                      new Text(
+                          'Kyn.',
+//                style: Theme.of(context).textTheme.display1,
+                          style: new TextStyle(fontFamily: "Source Serif Pro", fontSize: 60.0, fontWeight: FontWeight.bold, color: Colors.deepPurple)
+                      ),
                     ],
                   ),
                   new Column(
@@ -888,7 +891,8 @@ class _FamilyPageState extends State<FamilyPage> {
                             var data = {
                               'familyMembers':
                               {
-                                'name': _currentUser.displayName
+                                'name': _currentUser.displayName,
+                                'memberID': 'user '+ me.uid
                               }
                             };
 
@@ -910,6 +914,7 @@ class _FamilyPageState extends State<FamilyPage> {
                                     me.email).setData(userData);
                               });
                             } catch (e) {
+
                               print(e);
                             }
                           }
@@ -1015,6 +1020,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
                               .document(_currentUser.email)
                               .setData(familyData)
                               .then((val) {
+
                             session.setHeadOfHouseholdEmail(_currentUser.email);
                             var userData = {
                               'headOfHouseholdEmail': session
