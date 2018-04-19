@@ -1042,7 +1042,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
                               };
 
                               Firestore.instance.collection('Users').document(
-                                  me.uid).setData(userData);
+                                  me.email).updateData(userData);
                             })
                             .then((result){
 //                              showDialog(
@@ -1083,37 +1083,121 @@ class ResourcesPage extends StatefulWidget {
 }
 
 class _ResourcesPageState extends State<ResourcesPage> {
+  final TextEditingController _nameController = new TextEditingController();
+  final TextEditingController _phoneController = new TextEditingController();
+  GoogleSignInAccount _currentUser;
+
+  @override
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+    session.getHeadOfHouseholdEmailFromFirestore();
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+      setState(() {
+        _currentUser = account;
+        session.currentUid = account.id;
+      });
+    });
+    _googleSignIn.signInSilently()
+        .then((account) {
+      _currentUser = account;
+      session.currentUid = account.id;
+      print('the current user is: ' + _currentUser.toString());
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return new Scaffold(
-      appBar: new AppBar(
-        title: new Text('Resources'),
-      ),
-      body: new StreamBuilder<QuerySnapshot>(
-          stream:
-          Firestore.instance.collection("Family")
-              .document(session.getHeadOfHouseholdEmail())
-              .getCollection("resources").snapshots,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) return new Text("Loading...");
-            return new ListView(
-              children: snapshot.data.documents.map((document){
-                return new ListTile(
-                    title: new Text(document['name']),
-                    subtitle: new Text(document['phone'])
-                );
-              }).toList(),
+        appBar: new AppBar(
+          title: new Text("Resources"),
+        ),
+        body: new StreamBuilder<QuerySnapshot>(
+            stream:
+            Firestore.instance.collection('Family')
+                .document(session.getHeadOfHouseholdEmail())
+                .getCollection("Resources").snapshots,
 
-            );
-          }
-      ),
-      floatingActionButton: new FloatingActionButton(
-        backgroundColor: Colors.deepPurple,
-        tooltip: 'Add', // used by assistive technologies
-        child: new Icon(Icons.add),
-        onPressed: null,
-      ),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return new Text("Loading...");
+              return new ListView(
+                children: snapshot.data.documents.map((document) {
+                  return new ListTile(
+                    onLongPress: null,
+                    title: new Text(document['name']),
+                    subtitle: new Text(document['phone']),
+                  );
+                }).toList(),
+
+              );
+            }
+        ),
+        floatingActionButton: new FloatingActionButton(
+            backgroundColor: Colors.deepPurple,
+            tooltip: 'Add', // used by assistive technologies
+            child: new Icon(Icons.add),
+            onPressed: () async {
+              await showDialog<Null>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return new SimpleDialog(
+                      title: const Text('Add a new Resource'),
+                      children: <Widget>[
+                        new TextField(
+                            controller: _nameController,
+                            decoration: new InputDecoration(
+                                hintText: "Enter name"
+                            )
+                        ),
+                        new TextField(
+                            controller: _phoneController,
+                            decoration: new InputDecoration(
+                                hintText: "Enter phone number"
+                            )
+                        ),
+                        new IconButton(icon: new Icon(
+                            Icons.done, color: Colors.deepPurple),
+                            iconSize: 60.0,
+                            onPressed: () async {
+                              try {
+                                print("Trying...");
+                                print('user entered text: ');
+                                print(_nameController.text);
+
+//                                var rules = new List();
+//                                rules.add(await getRules());
+//                                rules.add(_ruleController.text);
+
+                                var data =
+                                {
+                                  'name': _nameController.text,
+                                  'phone': _phoneController.text
+                                };
+                                session.getHeadOfHouseholdEmailFromFirestore();
+                                print("email:" +session.getHeadOfHouseholdEmail());
+
+
+                                Firestore.instance.collection('Family')
+                                    .document(session.getHeadOfHouseholdEmail())
+                                    .getCollection("Resources")
+                                    .document()
+                                    .setData(data);
+                              } catch (e) {
+                                print("Failed");
+                                print(e);
+                              }
+                              Navigator.pop(context);
+                            }
+                        ),
+
+                      ],
+                    );
+                  }
+
+              );
+            }
+        )
     );
   }
 }
