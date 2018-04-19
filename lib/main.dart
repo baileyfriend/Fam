@@ -92,7 +92,6 @@ class Session {
       return '';
       }
     }
-  }
 }
 
 User me = new User();
