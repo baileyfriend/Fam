@@ -559,8 +559,13 @@ class _QuestionsPageState extends State<QuestionsPage>{
 
   @override
   Widget build(BuildContext context) {
+
     final TextEditingController _questionController = new TextEditingController();
-// TODO: implement build
+
+    final TextEditingController _answerController = new TextEditingController();
+
+    var question;
+
     return new Scaffold(
         appBar: new AppBar(
           title: new Text("Questions"),
@@ -577,6 +582,9 @@ class _QuestionsPageState extends State<QuestionsPage>{
                 children: snapshot.data.documents.map((document) {
                   return new ListTile(
                     onTap: () async {
+                      setState(() {
+                        question = document['question'];
+                      });
                       await showDialog<Null>(
                           context: context,
                           builder: (BuildContext context) {
@@ -610,8 +618,8 @@ class _QuestionsPageState extends State<QuestionsPage>{
                                         Firestore.instance.collection('Family')
                                             .document(session.getHeadOfHouseholdEmail())
                                             .getCollection("Questions")
-                                            .document()
-                                            .setData(data);
+                                            .document(question)
+                                            .updateData(data);
                                       } catch (e) {
                                         print("Failed");
                                         print(e);
@@ -626,8 +634,8 @@ class _QuestionsPageState extends State<QuestionsPage>{
 
                       );
                     },
-                    title: new Text("Question: "),
-                    subtitle: new Text(document['question']),
+                    title: new Text(document['question']),
+                    subtitle: new Text(document['answer']),
                   );
                 }).toList(),
 
@@ -666,7 +674,8 @@ class _QuestionsPageState extends State<QuestionsPage>{
 
                                 var data =
                                 {
-                                  'question': _questionController.text
+                                  'question': _questionController.text,
+                                  'answer': '' // must instantiate to something
                                 };
 
                                 print("email:" +session.getHeadOfHouseholdEmail());
@@ -675,7 +684,7 @@ class _QuestionsPageState extends State<QuestionsPage>{
                                 Firestore.instance.collection('Family')
                                     .document(session.getHeadOfHouseholdEmail())
                                     .getCollection("Questions")
-                                    .document()
+                                    .document(_questionController.text)
                                     .setData(data);
                               } catch (e) {
                                 print("Failed");
