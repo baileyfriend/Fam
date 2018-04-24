@@ -65,16 +65,18 @@ class Session {
   }
 
   String getHeadOfHouseholdEmail() {
-    return this.headOfHouseholdEmail;
+    return this.headOfHouseholdEmail.toLowerCase();
   }
 
 
   Future<String> getHeadOfHouseholdEmailFromFirestore() async {
+    //final FirebaseUser currentUser = await _auth.currentUser();
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
     print('getting hoh from firestore.. for user with email');
-    print(me.email);
+    print(user);
     DocumentSnapshot snapshot =
     await Firestore.instance.collection('Users')
-        .document(me.email)
+        .document(user.email)
         .get();
     try {
       var headOfHouseholdEmail = snapshot['headOfHouseholdEmail']; // seems like error happens here. Why?
@@ -161,17 +163,38 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   GoogleSignInAccount _currentUser;
 
+//  @override
+//  void initState() {
+//    super.initState();
+//    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+//      setState(() {
+//        _currentUser = account;
+//        //session.currentUid = account.id;
+//      });
+//    });
+//    _googleSignIn.signInSilently();
+////    setUserDataOnSilent();
+//  }
+
   @override
+  @protected
+  @mustCallSuper
   void initState() {
     super.initState();
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
-        //session.currentUid = account.id;
       });
     });
-    _googleSignIn.signInSilently();
-//    setUserDataOnSilent();
+    _googleSignIn.signInSilently()
+        .then((account) {
+      _currentUser = account;
+//      session.currentUid = account.id;
+      //print('the current user is: ' + _currentUser.toString());
+    });
+
+    session.getHeadOfHouseholdEmailFromFirestore();
+    print('the head of household email is ' + session.getHeadOfHouseholdEmail());
   }
 
   Future<Null> _handleSignIn() async {
@@ -205,10 +228,23 @@ class _MyHomePageState extends State<MyHomePage> {
       me.setDisplayName(user.displayName);
       print(me.toString());
 
+      var gotUser = await Firestore.instance.collection('Users')
+          .document(user.email).get();
+      print('the user info was: ');
+      print(gotUser);
 
-      Firestore.instance.collection('Users')
-          .document(user.email)
-          .setData(userData);
+      try{
+        var email = gotUser['email'];
+        print('The user wasnt null\n\n');
+        Firestore.instance.collection('Users')
+            .document(email)
+            .updateData(userData);
+      } catch(e) {
+        print('the user was null\n\n');
+        Firestore.instance.collection('Users')
+            .document(user.email)
+            .setData(userData);
+      }
 
 
       print('put data into cloud firestore');
@@ -953,12 +989,11 @@ class _FamilyPageState extends State<FamilyPage> {
                               _passwordController.text); // data being hashed
                           var pwGuessHash = sha256.convert(bytes).toString();
 
-                          if (pw == pwGuessHash) { // @TODO hash the pw
+                          if (pw == pwGuessHash) {
                             var data = {
                               'familyMembers':
                               {
-                                'name': _currentUser.displayName,
-                                'memberID': 'user '+ me.uid // @TODO whats happening here?
+                                'name': _currentUser.displayName
                               }
                             };
 
@@ -973,13 +1008,23 @@ class _FamilyPageState extends State<FamilyPage> {
                                     headOfHouseholdEmail);
 // Set head of household
                                 var userData = {
+                                  'displayName': me.displayName,
+                                  'uid': me.uid,
+                                  'email': me.email,
                                   'headOfHouseholdEmail': session
-                                      .getHeadOfHouseholdEmail()
+                                      .getHeadOfHouseholdEmail().toLowerCase()
                                 };
                                 Firestore.instance.collection('Users').document(
                                     me.email).updateData(userData)
                                 .then((val) {
                                   Navigator.of(context).pushNamed("/LoggedInPage");
+                                })
+                                .catchError((e){
+                                  Firestore.instance.collection('Users').document(
+                                      me.email).setData(userData)
+                                      .then((val) {
+                                    Navigator.of(context).pushNamed("/LoggedInPage");
+                                  });
                                 });
                               });
                             } catch (e) {
@@ -1118,6 +1163,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
 //                                ),
 //                              );
                             print('successfully set head of household to self');
+                            Navigator.of(context).pushNamed("/LoggedInPage");
                             })
                             .catchError((error){
 
