@@ -576,7 +576,56 @@ class _QuestionsPageState extends State<QuestionsPage>{
               return new ListView(
                 children: snapshot.data.documents.map((document) {
                   return new ListTile(
-                    onLongPress: null,
+                    onTap: () async {
+                      await showDialog<Null>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return new SimpleDialog(
+                              title: const Text('Answer the Question'),
+                              children: <Widget>[
+                                new TextField(
+                                    controller: _answerController,
+                                    decoration: new InputDecoration(
+                                        hintText: "Enter the answer"
+                                    )
+                                ),
+                                new IconButton(icon: new Icon(
+                                    Icons.done, color: Colors.deepPurple),
+                                    iconSize: 60.0,
+                                    onPressed: () async {
+                                      try {
+                                        print("Trying...");
+                                        print('user entered text: ');
+                                        print(_answerController.text);
+
+
+                                        var data =
+                                        {
+                                          'answer': _answerController.text
+                                        };
+
+                                        print("email:" +session.getHeadOfHouseholdEmail());
+
+
+                                        Firestore.instance.collection('Family')
+                                            .document(session.getHeadOfHouseholdEmail())
+                                            .getCollection("Questions")
+                                            .document()
+                                            .setData(data);
+                                      } catch (e) {
+                                        print("Failed");
+                                        print(e);
+                                      }
+                                      Navigator.pop(context);
+                                    }
+                                ),
+
+                              ],
+                            );
+                          }
+
+                      );
+                    },
                     title: new Text("Question: "),
                     subtitle: new Text(document['question']),
                   );
