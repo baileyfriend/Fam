@@ -70,8 +70,8 @@ class Session {
 
 
   Future<String> getHeadOfHouseholdEmailFromFirestore() async {
-    print('getting hoh from firestore.. for user with uid ');
-    print(this.currentUid);
+    print('getting hoh from firestore.. for user with email');
+    print(me.email);
     DocumentSnapshot snapshot =
     await Firestore.instance.collection('Users')
         .document(me.email)
@@ -167,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
-        session.currentUid = account.id;
+        //session.currentUid = account.id;
       });
     });
     _googleSignIn.signInSilently();
@@ -229,12 +229,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
   Future<Null> _switchLoggedInPage() async {
+    session.getHeadOfHouseholdEmailFromFirestore();
+    print('Hoh is : ' );
+    print(session.getHeadOfHouseholdEmail());
     if (_currentUser != null) {
-      if (session.getHeadOfHouseholdEmail() ==
-          null) { // if session doesn't have a head of household email yet
-        String headOfHouseholdEmail = await getHeadOfHousehold();
-        session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
-        if (headOfHouseholdEmail == '') {
+      if (session.getHeadOfHouseholdEmail() == '') { // if session doesn't have a head of household email yet
+        //String headOfHouseholdEmail = await getHeadOfHousehold();
+        //session.setHeadOfHouseholdEmail(headOfHouseholdEmail);
+        //if (headOfHouseholdEmail == '') {
           Navigator.of(context).pushNamed("/FamilyPage");
         } else {
           Navigator.of(context).pushNamed("/LoggedInPage");
@@ -243,7 +245,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Navigator.of(context).pushNamed("/LoggedInPage");
       }
     }
-  }
+
 
   Future<String> getHeadOfHousehold() async {
     DocumentSnapshot snapshot =
@@ -665,14 +667,14 @@ class _RulesPageState extends State<RulesPage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
-        session.currentUid = account.id;
+//        session.currentUid = account.id;
         print('GOT THE EMAIL: ' + _currentUser.email);
       });
     });
     _googleSignIn.signInSilently()
         .then((account) {
       _currentUser = account;
-      session.currentUid = account.id;
+//      session.currentUid = account.id;
       print('the current user is: ' + _currentUser.toString());
     });
 
@@ -819,14 +821,14 @@ class _FamilyPageState extends State<FamilyPage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
-        session.currentUid = account.id;
+        //session.currentUid = account.id;
         print('GOT THE EMAIL: ' + _currentUser.email);
       });
     });
     _googleSignIn.signInSilently()
         .then((account) {
       _currentUser = account;
-      session.currentUid = account.id;
+//      session.currentUid = account.id;
       print('the current user is: ' + _currentUser.toString());
     });
   }
@@ -839,11 +841,14 @@ class _FamilyPageState extends State<FamilyPage> {
   }
 
   Future<String> getPassword(String email) async {
-    session.getHeadOfHouseholdEmailFromFirestore();
+    //session.getHeadOfHouseholdEmailFromFirestore();
+    //var headOfHouseholdEmail = session.getHeadOfHouseholdEmail();
+    print('======================================================================The head of household email is ' );
+    print(email);
     DocumentSnapshot snapshot =
     await Firestore.instance
         .collection('Family')
-        .document(session.getHeadOfHouseholdEmail())
+        .document(email)
         .get();
     var pw = snapshot['password'];
     if (pw is String) {
@@ -884,7 +889,7 @@ class _FamilyPageState extends State<FamilyPage> {
                     new RaisedButton(
                         color: Colors.green,
                         onPressed: () async {
-                          var pw = await getPassword(_emailController.text);
+                          var pw = await getPassword(_emailController.text.toLowerCase());
                           print(pw);
                           var bytes = UTF8.encode(
                               _passwordController.text); // data being hashed
@@ -895,7 +900,7 @@ class _FamilyPageState extends State<FamilyPage> {
                               'familyMembers':
                               {
                                 'name': _currentUser.displayName,
-                                'memberID': 'user '+ me.uid
+                                'memberID': 'user '+ me.uid // @TODO whats happening here?
                               }
                             };
 
@@ -914,7 +919,10 @@ class _FamilyPageState extends State<FamilyPage> {
                                       .getHeadOfHouseholdEmail()
                                 };
                                 Firestore.instance.collection('Users').document(
-                                    me.email).setData(userData);
+                                    me.email).updateData(userData)
+                                .then((val) {
+                                  Navigator.of(context).pushNamed("/LoggedInPage");
+                                });
                               });
                             } catch (e) {
 
@@ -957,13 +965,13 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
-        session.currentUid = account.id;
+//        session.currentUid = account.id;
       });
     });
     _googleSignIn.signInSilently()
         .then((account) {
       _currentUser = account;
-      session.currentUid = account.id;
+//      session.currentUid = account.id;
       print('the current user is: ' + _currentUser.toString());
     });
   }
@@ -1042,7 +1050,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
                               };
 
                               Firestore.instance.collection('Users').document(
-                                  me.email).updateData(userData);
+                                  _currentUser.email).updateData(userData);
                             })
                             .then((result){
 //                              showDialog(
@@ -1051,7 +1059,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
 //                                  title: new Text('Successfully set password'),
 //                                ),
 //                              );
-                            print('successfully set stuff');
+                            print('successfully set head of household to self');
                             })
                             .catchError((error){
 
@@ -1063,6 +1071,7 @@ class _HeadOfHouseholdPageState extends State<HeadOfHouseholdPage> {
 //                            builder: (_) => new AlertDialog(
 //                            title: new Text('Successfully set password'),
 //                            ),
+
                           }
 
                         },
@@ -1096,13 +1105,13 @@ class _ResourcesPageState extends State<ResourcesPage> {
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
       setState(() {
         _currentUser = account;
-        session.currentUid = account.id;
+//        session.currentUid = account.id;
       });
     });
     _googleSignIn.signInSilently()
         .then((account) {
       _currentUser = account;
-      session.currentUid = account.id;
+//      session.currentUid = account.id;
       print('the current user is: ' + _currentUser.toString());
     });
   }
