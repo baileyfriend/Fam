@@ -12,36 +12,76 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kyn/platform_adaptive.dart';
 import 'package:kyn/main.dart';
+import 'package:meta/meta.dart';
 
 // Message list for FireStore
-class MessageList extends StatelessWidget {
+class MessageList extends StatefulWidget {
+  @override
+  State createState() => new MessageListState();
 
-  Future<Null> _printStuff() async{
-    print("TAPPED\n");
+}
+
+class MessageListState extends State<MessageList> {
+  void initState() {
+    setState(() {
+      session.getHeadOfHouseholdEmailFromFirestore();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return new StreamBuilder<QuerySnapshot>(
-      stream: Firestore.instance.collection('Messages').snapshots,
+      stream: Firestore.instance.collection('Family/'+session.getHeadOfHouseholdEmail()+'/Messages').snapshots,
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (!snapshot.hasData) return const Text('Loading...');
         return new Flexible(
-          child:
-          new ListView(
-            children: snapshot.data.documents.map((DocumentSnapshot document) {
-              return new ListTile(
-                  isThreeLine: true,
-                  leading: new CircleAvatar(backgroundImage: new NetworkImage(document['userImgUrl'])),
-                  title: new Text(document['sender'],style: new TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle:
-                      document['text'] != ''? new Text(document['text'], style: new TextStyle(fontSize: 16.0)): new Image.network(document['imageUrl'], width: 300.0,),
-                  onTap: () {
-                    print("Tapped\n");
-                  }
-              );
-            }).toList(),
-          )
+            child:
+            new ListView(
+              children: snapshot.data.documents.map((DocumentSnapshot document) {
+                return new ListTile(
+                    leading: me.uid == document['senderID'] ? new CircleAvatar(backgroundImage: new NetworkImage(document['userImgUrl'])):null,
+                    trailing: me.uid != document['senderID'] ? new CircleAvatar(backgroundImage: new NetworkImage(document['userImgUrl'])):null,
+//                  subtitle: new Text('Feb. 24 | 11:03 PM', style: new TextStyle(fontSize: 12.0)),
+                    title:
+                    new Card(
+                      color: Colors.white,
+                      child: new Column(
+                        children: <Widget>[
+                          new Row(
+                            children: <Widget>[
+                              new Container(
+                                padding: const EdgeInsets.only(left: 8.0, top: 8.0),
+                                child:  new Text(document['sender'],style: new TextStyle(fontWeight: FontWeight.bold)),
+
+                              )
+
+                            ],
+                          ),
+                          new Row(
+                            children: <Widget>[
+                              new Expanded(
+                                child: new Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    new Container(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: document['text'] != ''? new Text(document['text'], style: new TextStyle(fontSize: 16.0)): new Image.network(document['imageUrl'], width: 300.0,),
+
+                                    )
+                                  ],
+                                ),
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                    onTap: () {
+                      new Card(color: Colors.lightBlue,);
+                    }
+                );
+              }).toList(),
+            )
         );
       },
     );
@@ -51,54 +91,38 @@ class MessageList extends StatelessWidget {
 
 // Firestore
 class HubPage extends StatefulWidget{
-//  CollectionReference get Messages => Firestore.instance.collection('Messages');
-//
-//  Future<Null> _addMessage() async{
-//    Firestore.instance
-//      .collection('Messages')
-//      .document()
-//      .setData(<String, String>{
-//        'title': 'title stuff',
-//        'text': 'Demo text for message'
-//      });
-//  }
-//
-//  @override
-//  Widget build(BuildContext context) {
-//    return new Scaffold(
-//      appBar: new AppBar(
-//        title: const Text('Firestore Demo'),
-//      ),
-//      body: new MessageList(),
-//      floatingActionButton: new FloatingActionButton(
-//        onPressed: _addMessage,
-//          tooltip: 'Increment',
-//          child: new Icon(Icons.add),
-//      ),
-//    );
-//  }
-
   @override
   State createState() => new HubPageState();
 }
 
-class HubPageState extends State<HubPage> with TickerProviderStateMixin{
-  CollectionReference get Messages => Firestore.instance.collection('Messages');
-//  DocumentReference messageDocRef = Firestore.instance.collection('Family/' + session.getHeadOfHouseholdEmail() + '/Messages').document();
-  DocumentReference messageDocRef = Firestore.instance.collection('Messages').document();
-  TextEditingController _textController = new TextEditingController();
-  bool _isComposing = false;
+class HubPageState extends State<HubPage>{
+  GoogleSignInAccount _currentUser;
   GoogleSignIn _googleSignIn = new GoogleSignIn();
 
-//  Future<Null> _addMessage() async{
-//    var account = await _googleSignIn.signIn();
-//
-//    messageDocRef.setData(<String, String>{
-//      'title': 'title stuff',
-//      'text': 'Demo text for message',
-//      'sender': account.displayName,
-//    });
-//  }
+  @override
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+    session.getHeadOfHouseholdEmailFromFirestore();
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
+      setState(() {
+        _currentUser = account;
+//        session.currentUid = account.id;
+      });
+    });
+    _googleSignIn.signInSilently()
+        .then((account) {
+      _currentUser = account;
+//      session.currentUid = account.id;
+      print('the current user is: ' + _currentUser.toString());
+    });
+  }
+
+  CollectionReference get messages => Firestore.instance.collection('Family/' + session.getHeadOfHouseholdEmail() + '/Messages');
+  CollectionReference get photos => Firestore.instance.collection('Family/' + session.getHeadOfHouseholdEmail() + '/Photos');
+  TextEditingController _textController = new TextEditingController();
+  bool _isComposing = false;
 
   Future<Null> _handlePhotoButtonPressed() async {
     var imageFile = await ImagePicker.pickImage();
@@ -109,15 +133,19 @@ class HubPageState extends State<HubPage> with TickerProviderStateMixin{
 
     _textController.clear();
     _googleSignIn.signInSilently().then((user) {
-      Firestore.instance.collection('Messages').document().setData(<String, String>{
+      messages.document().setData(<String, String>{
         'text': '',
         'sender': user.displayName,
+        'senderID': me.uid,
         'userImgUrl': user.photoUrl,
         'imageUrl': downloadUrl.toString()
       });
+      photos.document().setData(<String, String>{
+        'sender': user.displayName,
+        'senderID': me.uid,
+        'imageUrl': downloadUrl.toString()
+      });
     });
-
-    print("Photo Button Pressed\n");
   }
 
 
@@ -131,10 +159,11 @@ class HubPageState extends State<HubPage> with TickerProviderStateMixin{
     _textController.clear();
     if(text != '') {
       _googleSignIn.signInSilently().then((user) {
-        Firestore.instance.collection('Messages').document().setData(
+        messages.document().setData(
             <String, String>{
               'text': text,
               'sender': user.displayName,
+              'senderID': me.uid,
               'userImgUrl': user.photoUrl,
               'imageUrl': ''
             });
@@ -179,17 +208,17 @@ class HubPageState extends State<HubPage> with TickerProviderStateMixin{
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      appBar: new AppBar(
-        title: const Text('The Hub'),
-      ),
-      body:
+        appBar: new AppBar(
+          title: const Text('The Hub'),
+        ),
+        body:
         new Column( children: [
-        new MessageList(),
-        new Divider(height: 1.0),
-        new Container(
-            decoration: new BoxDecoration(color: Theme.of(context).cardColor),
-            child: _buildTextComposer()),
-      ],)
+          new MessageList(),
+          new Divider(height: 1.0),
+          new Container(
+              decoration: new BoxDecoration(color: Theme.of(context).cardColor),
+              child: _buildTextComposer()),
+        ],)
 //        new MessageList(),
 //        floatingActionButton: new FloatingActionButton(
 //          onPressed: _addMessage,
@@ -203,256 +232,4 @@ class HubPageState extends State<HubPage> with TickerProviderStateMixin{
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Live Database
-class HubPage_ extends StatefulWidget{
-  @override
-  State createState() => new HubPageState_();
-}
-
-// Live Database
-class HubPageState_ extends State<HubPage_> with TickerProviderStateMixin {
-  List<ChatMessage> _messages = [];
-  DatabaseReference _messagesReference = FirebaseDatabase.instance.reference();
-  TextEditingController _textController = new TextEditingController();
-  bool _isComposing = false;
-  GoogleSignIn _googleSignIn = new GoogleSignIn();
-
-  @override
-  void initState() {
-    super.initState();
-    _googleSignIn.signInSilently();
-    FirebaseAuth.instance.signInAnonymously().then((user) {
-//      _messagesReference.onChildAdded.listen((Event event) {
-//        var val = event.snapshot.value;
-//        _addMessage(
-//            name: val['sender']['name'],
-//            senderImageUrl: val['sender']['imageUrl'],
-//            text: val['text'],
-//            imageUrl: val['imageUrl'],
-//            textOverlay: val['textOverlay']);
-//      });
-    });
-  }
-
-  @override
-  void dispose() {
-    for (ChatMessage message in _messages) {
-      message.animationController.dispose();
-    }
-    super.dispose();
-  }
-
-  void _handleMessageChanged(String text) {
-    setState(() {
-      _isComposing = text.length > 0;
-    });
-  }
-
-  void _handleSubmitted(String text) {
-    _textController.clear();
-    _googleSignIn.signIn().then((user) {
-      var message = {
-        'sender': {
-          'name': user.displayName,
-          'imageUrl': user.photoUrl},
-          'text': text,
-      };
-      _messagesReference.push().set(message);
-    });
-  }
-
-  void _addMessage(
-      {String name,
-        String text,
-        String imageUrl,
-        String textOverlay,
-        String senderImageUrl}) {
-    var animationController = new AnimationController(
-      duration: new Duration(milliseconds: 700),
-      vsync: this,
-    );
-    var sender = new ChatUser(name: name, imageUrl: senderImageUrl);
-    var message = new ChatMessage(
-        sender: sender,
-        text: text,
-        imageUrl: imageUrl,
-        textOverlay: textOverlay,
-        animationController: animationController);
-    setState(() {
-      _messages.insert(0, message);
-    });
-    if (imageUrl != null) {
-      NetworkImage image = new NetworkImage(imageUrl);
-      image
-          .resolve(createLocalImageConfiguration(context))
-          .addListener((_, __) {
-        animationController?.forward();
-      });
-    } else {
-      animationController?.forward();
-    }
-  }
-
-  Future<Null> _handlePhotoButtonPressed() async {
-    var account = await _googleSignIn.signIn();
-    var imageFile = await ImagePicker.pickImage();
-    var random = new Random().nextInt(10000);
-    var ref = FirebaseStorage.instance.ref().child('image_$random.jpg');
-    var uploadTask = ref.put(imageFile);
-    var textOverlay = "";
-//    await Navigator.push(context, new TypeMemeRoute(imageFile));
-    if (textOverlay == null) return;
-    var downloadUrl = (await uploadTask.future).downloadUrl;
-    var message = {
-      'sender': {'name': account.displayName, 'imageUrl': account.photoUrl},
-      'imageUrl': downloadUrl.toString(),
-      'textOverlay': textOverlay,
-    };
-    _messagesReference.push().set(message);
-  }
-
-  Widget _buildTextComposer() {
-    return new IconTheme(
-        data: new IconThemeData(color: Theme.of(context).accentColor),
-        child: new PlatformAdaptiveContainer(
-            margin: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: new Row(children: [
-              new Container(
-                margin: new EdgeInsets.symmetric(horizontal: 4.0),
-                child: new IconButton(
-                  icon: new Icon(Icons.photo),
-                  onPressed: _handlePhotoButtonPressed,
-                ),
-              ),
-              new Flexible(
-                child: new TextField(
-                  controller: _textController,
-                  onSubmitted: _handleSubmitted,
-                  onChanged: _handleMessageChanged,
-                  decoration:
-                  new InputDecoration.collapsed(hintText: 'Send a message'),
-                ),
-              ),
-              new Container(
-                  margin: new EdgeInsets.symmetric(horizontal: 4.0),
-                  child: new PlatformAdaptiveButton(
-                    icon: new Icon(Icons.send),
-                    onPressed: _isComposing
-                        ? () => _handleSubmitted(_textController.text)
-                        : null,
-                    child: new Text('Send'),
-                  )),
-            ])));
-  }
-
-  Widget build(BuildContext context) {
-    return new Scaffold(
-        appBar: new PlatformAdaptiveAppBar(
-          title: new Text('The Hub'),
-          platform: Theme.of(context).platform,
-        ),
-        body: new Column(children: [
-          new Flexible(
-              child: new ListView.builder(
-                padding: new EdgeInsets.all(8.0),
-                reverse: true,
-                itemBuilder: (_, int index) =>
-                new ChatMessageListItem(_messages[index]),
-                itemCount: _messages.length,
-              )),
-          new Divider(height: 1.0),
-          new Container(
-              decoration: new BoxDecoration(color: Theme.of(context).cardColor),
-              child: _buildTextComposer()),
-        ]));
-  }
-}
-
-class ChatUser {
-  ChatUser({this.name, this.imageUrl});
-  final String name;
-  final String imageUrl;
-}
-
-class ChatMessage {
-  ChatMessage(
-      {this.sender,
-        this.text,
-        this.imageUrl,
-        this.textOverlay,
-        this.animationController});
-  final ChatUser sender;
-  final String text;
-  final String imageUrl;
-  final String textOverlay;
-  final AnimationController animationController;
-}
-
-class ChatMessageListItem extends StatelessWidget {
-  ChatMessageListItem(this.message);
-
-  final ChatMessage message;
-
-  Widget build(BuildContext context) {
-    return new SizeTransition(
-        sizeFactor: new CurvedAnimation(
-            parent: message.animationController, curve: Curves.easeOut),
-        axisAlignment: 0.0,
-        child: new Container(
-          margin: const EdgeInsets.symmetric(vertical: 10.0),
-          child: new Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              new Container(
-                margin: const EdgeInsets.only(right: 16.0),
-                child: new CircleAvatar(),
-              ),
-              new Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  new Text(message.sender.name,
-                      style:  new TextStyle(fontWeight: FontWeight.bold)),
-                  new Container(
-                      margin: const EdgeInsets.only(top: 5.0),
-                      child: new ChatMessageContent(message)),
-                ],
-              ),
-            ],
-          ),
-        ));
-  }
-}
-
-class ChatMessageContent extends StatelessWidget {
-  ChatMessageContent(this.message);
-  final ChatMessage message;
-
-  Widget build(BuildContext context) {
-    if (message.imageUrl != null) {
-      var image = new Image.network(message.imageUrl, width: 200.0);
-      if (message.textOverlay == null) {
-        return image;
-      } else {
-        return new Stack(
-          alignment: FractionalOffset.topCenter,
-          children: [
-            image,
-            new Container(
-                alignment: FractionalOffset.topCenter,
-                width: 200.0,
-                child: new Text(message.textOverlay,
-                    style: const TextStyle(
-                        fontFamily: 'Anton',
-                        fontSize: 30.0,
-                        color: Colors.white),
-                    softWrap: true,
-                    textAlign: TextAlign.center)),
-          ],
-        );
-      }
-    } else
-      return new Text(message.text);
-  }
-
-}
 
