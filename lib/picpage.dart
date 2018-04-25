@@ -101,38 +101,3 @@ class PicturesPageState extends State<PicturesPage>{
     );
   }
 }
-
-
-
-Widget buildGrid() {
-  return new GridView.extent(
-      maxCrossAxisExtent: 150.0,
-      padding: const EdgeInsets.all(4.0),
-      mainAxisSpacing: 4.0,
-      crossAxisSpacing: 4.0,
-      children: _buildGridTileList(7));
-}
-
-List<Container> _buildGridTileList(int count) {
-  List<String> urlList = ['null'];
-
-  Firestore.instance.collection('Photos').snapshots.listen((snapshot){
-    snapshot.documents.forEach((doc) =>  print(doc['imageUrl']) );
-//    snapshot.documents.forEach((doc) =>  urlList.add(doc['imageUrl']) );
-  });
-  urlList.add('https://firebasestorage.googleapis.com/v0/b/kyn-app.appspot.com/o/image_2936.jpg?alt=media&token=0a24d495-3352-47b6-bafa-cc84cad54dd1');
-  urlList.add('https://firebasestorage.googleapis.com/v0/b/kyn-app.appspot.com/o/image_4424.jpg?alt=media&token=91e8df5b-e528-4bf2-94f6-e7fa032c76bd');
-  urlList.add('https://firebasestorage.googleapis.com/v0/b/kyn-app.appspot.com/o/image_8503.jpg?alt=media&token=39b8577c-f6dc-420c-b455-a37298647953');
-  urlList.add('https://firebasestorage.googleapis.com/v0/b/kyn-app.appspot.com/o/image_4088.jpg?alt=media&token=682afbbc-67b3-42cd-a72c-eb114abf8974');
-  urlList.add('https://firebasestorage.googleapis.com/v0/b/kyn-app.appspot.com/o/image_1910.jpg?alt=media&token=f6908f1d-1b31-4da8-a87a-eebab67eba38');
-  urlList.add('https://firebasestorage.googleapis.com/v0/b/kyn-app.appspot.com/o/image_3217.jpg?alt=media&token=e4a029df-e076-4bfa-bd49-d407a4cf479c');
-  urlList.add('https://firebasestorage.googleapis.com/v0/b/kyn-app.appspot.com/o/image_2228.jpg?alt=media&token=8a89c776-ab86-427b-b73a-337beb4fb0e5');
-
-//  print("Objects: " + urlList.length.toString());
-//  print("stuff: " + urlList[1]);
-  List<Container> containers = new List<Container>.generate(
-      count,
-          (int index) =>
-      new Container(child: new Image.network(urlList[index+1])));
-  return containers;
-}
